@@ -3,9 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/landing/Navbar';
 import { Hero } from '@/components/landing/Hero';
 import { DashboardPreview } from '@/components/landing/DashboardPreview';
-import { ApiDocs } from '@/components/landing/ApiDocs';
-import { CallToAction } from '@/components/landing/CallToAction';
-import { Footer } from '@/components/landing/Footer';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { TheDifference } from '@/components/landing/TheDifference';
 
@@ -55,7 +52,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-blue-500/30 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-950 font-sans selection:bg-violet-200 selection:text-violet-950">
       <Navbar />
       <Hero
         activeTab={activeTab}
@@ -67,12 +64,9 @@ const HomePage = () => {
         onRunEngine={handleRunEngine}
         onFileUpload={handleFileUpload}
       />
-      <DashboardPreview activeTab={activeTab} />
+      <DashboardPreview />
       <HowItWorks />
       <TheDifference />
-      <ApiDocs />
-      <CallToAction />
-      <Footer />
     </div>
   );
 };

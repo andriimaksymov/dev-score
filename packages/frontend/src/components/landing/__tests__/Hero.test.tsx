@@ -20,7 +20,7 @@ describe('Hero Component', () => {
                 <Hero {...defaultProps} />
             </MemoryRouter>
         );
-        expect(screen.getByText(/Dev Profile, Scored/i)).toBeInTheDocument();
+        expect(screen.getByText(/Complete Developer Profile Analysis/i)).toBeInTheDocument();
     });
 
     it('renders the CTA button', () => {
@@ -29,7 +29,7 @@ describe('Hero Component', () => {
                 <Hero {...defaultProps} />
             </MemoryRouter>
         );
-        const ctaButton = screen.getByRole('button', { name: /Run Analysis/i });
+        const ctaButton = screen.getByRole('button', { name: /Analyze Profile/i });
         expect(ctaButton).toBeInTheDocument();
     });
 
@@ -39,6 +39,6 @@ describe('Hero Component', () => {
                 <Hero {...defaultProps} />
             </MemoryRouter>
         );
-        expect(screen.getByText(/Multi-Source Portfolio Analyzer/i)).toBeInTheDocument();
+        expect(screen.getByText(/Choose Analysis Source/i)).toBeInTheDocument();
     });
 });

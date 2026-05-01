@@ -10,6 +10,6 @@ describe('App', () => {
             </MemoryRouter>
         );
         // Expect the Hero section title to be present as a basic smoke test
-        expect(screen.getByText(/Dev Profile, Scored/i)).toBeInTheDocument();
+        expect(screen.getByText(/Complete Developer Profile Analysis/i)).toBeInTheDocument();
     });
 });

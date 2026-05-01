@@ -1,69 +1,58 @@
-import { Github, Sparkles } from 'lucide-react';
+import { Code2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Navbar = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const scrollToSection = (id: string) => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            navigate(`/#${id}`);
-        }
-    };
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    navigate(`/#${id}`);
+  };
 
-    return (
-        <nav className="fixed top-0 w-full z-50 transition-all duration-500 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50 py-3">
-            <div className="max-w-7xl mx-auto px-4 md:px-6 flex items-center">
-                <div
-                    className="flex items-center gap-2 md:gap-3 group cursor-pointer"
-                    onClick={() => navigate('/')}
-                >
-                    <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-2 md:p-2.5 rounded-xl shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform">
-                        <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-white" />
-                    </div>
-                    <span className="text-xl md:text-2xl font-black text-white tracking-tighter">DevScore</span>
-                </div>
-                <div className="hidden lg:flex items-center gap-10 ml-auto text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                    <button
-                        onClick={() => scrollToSection('how-it-works')}
-                        className="hover:text-indigo-400 transition-colors cursor-pointer"
-                    >
-                        How It Works
-                    </button>
-                    <button
-                        onClick={() => scrollToSection('demo')}
-                        className="hover:text-indigo-400 transition-colors cursor-pointer"
-                    >
-                        Analyzer
-                    </button>
-                    <button
-                        onClick={() => scrollToSection('api')}
-                        className="hover:text-indigo-400 transition-colors cursor-pointer"
-                    >
-                        Architecture
-                    </button>
-                    <a
-                        href="https://github.com/andriimaksymov"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="bg-slate-900 border border-slate-800 px-4 py-2 rounded-lg text-slate-300 hover:text-white transition-all flex items-center gap-2 cursor-pointer shadow-xl hover:bg-slate-800"
-                    >
-                        <Github size={14} /> Source
-                    </a>
-                </div>
-                <div className="flex ml-auto items-center gap-3">
-                    <a
-                        href="https://github.com/andriimaksymov"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="lg:hidden p-2 text-slate-400 hover:text-white transition-colors"
-                    >
-                        <Github size={20} />
-                    </a>
-                </div>
-            </div>
-        </nav>
-    );
+  return (
+    <nav className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-6 lg:px-8">
+        <button
+          className="flex items-center gap-3"
+          onClick={() => navigate('/')}
+          type="button"
+          aria-label="Go to home"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-600 text-white">
+            <Code2 className="h-4 w-4" />
+          </span>
+          <span className="text-xl font-bold tracking-tight text-slate-950">DevScore</span>
+        </button>
+
+        <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 md:flex">
+          <button className="text-sm font-medium text-slate-950" onClick={() => navigate('/')} type="button">
+            Home
+          </button>
+          <button className="text-sm font-medium text-slate-500 hover:text-slate-950" onClick={() => scrollToSection('how-it-works')} type="button">
+            How it Works
+          </button>
+          <button className="text-sm font-medium text-slate-500 hover:text-slate-950" onClick={() => scrollToSection('privacy')} type="button">
+            Privacy
+          </button>
+        </div>
+
+        <div className="ml-auto hidden items-center gap-6 sm:flex">
+          <button className="text-sm font-semibold text-slate-500 hover:text-slate-950" type="button">
+            Sign In
+          </button>
+          <button
+            className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800"
+            onClick={() => scrollToSection('demo')}
+            type="button"
+          >
+            Get Started
+          </button>
+        </div>
+      </div>
+    </nav>
+  );
 };

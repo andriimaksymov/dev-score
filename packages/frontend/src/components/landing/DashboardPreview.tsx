@@ -1,53 +1,42 @@
-import { Eye, Globe } from 'lucide-react';
-import { RepoAudit } from '../dashboard/RepoAudit';
-import { NetworkMap } from '../dashboard/NetworkMap';
-import { ATSScan } from '../dashboard/ATSScan';
+import { BarChart3, Shield, TrendingUp, Zap } from 'lucide-react';
 
-interface DashboardPreviewProps {
-    activeTab: string;
-}
+const features = [
+  {
+    title: 'Comprehensive Analysis',
+    description: 'Deep insights across technical skills, project impact, and career positioning',
+    icon: BarChart3,
+  },
+  {
+    title: 'Actionable Roadmap',
+    description: 'Step-by-step recommendations to improve your developer profile',
+    icon: TrendingUp,
+  },
+  {
+    title: 'Privacy First',
+    description: 'All analysis runs locally. Your data never leaves your browser',
+    icon: Shield,
+  },
+  {
+    title: 'Free & Open Source',
+    description: 'No sign-up required. Completely free to use and inspect',
+    icon: Zap,
+  },
+];
 
-export const DashboardPreview = ({ activeTab }: DashboardPreviewProps) => {
-    return (
-        <section className="max-w-7xl mx-auto px-4 md:px-6 pb-24 md:pb-40">
-            <div className="relative group">
-                <div className="absolute -inset-4 md:-inset-10 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-indigo-600/10 blur-[100px] rounded-full opacity-50 transition-opacity group-hover:opacity-70" />
+export const DashboardPreview = () => {
+  return (
+    <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-16 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
+      {features.map((feature) => {
+        const Icon = feature.icon;
 
-                <div className="relative bg-slate-950 border border-slate-800/80 rounded-[2rem] md:rounded-[4rem] overflow-hidden shadow-2xl">
-                    {/* Console Header */}
-                    <div className="border-b border-slate-800 px-6 md:px-10 py-6 md:py-8 flex flex-col md:flex-row items-center justify-between bg-slate-950/80 backdrop-blur-md gap-4">
-                        <div className="flex items-center gap-6">
-                            <div className="flex -space-x-3">
-                                {[1, 2, 3].map(i => (
-                                    <div key={i} className={`w-10 h-10 rounded-full border-4 border-slate-950 bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400`}>
-                                        {i}
-                                    </div>
-                                ))}
-                            </div>
-                            <div>
-                                <h3 className="text-base font-black uppercase tracking-widest text-white">
-                                    Demo Preview: <span className="text-blue-500 font-mono tracking-normal">{activeTab.toUpperCase()}</span>
-                                </h3>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Example Analysis Results</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <button className="p-3 bg-slate-900 rounded-xl border border-slate-800 hover:border-slate-700 transition-colors text-slate-400">
-                                <Eye size={18} />
-                            </button>
-                            <button className="px-6 py-3 bg-slate-900 rounded-xl border border-slate-800 text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center gap-2">
-                                <Globe size={14} /> Shared View
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="p-6 sm:p-8 md:p-16">
-                        {activeTab === 'github' && <RepoAudit />}
-                        {activeTab === 'linkedin' && <NetworkMap />}
-                        {activeTab === 'cv' && <ATSScan />}
-                    </div>
-                </div>
-            </div>
-        </section>
-    )
-}
+        return (
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm" key={feature.title}>
+            <Icon className="h-8 w-8 text-violet-600" />
+            <h3 className="mt-6 font-bold text-slate-950">{feature.title}</h3>
+            <p className="mt-3 leading-6 text-slate-500">{feature.description}</p>
+          </div>
+        );
+      })}
+    </section>
+  );
+};

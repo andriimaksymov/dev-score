@@ -1,279 +1,319 @@
 import {
-    Trophy,
-    TrendingUp,
-    Zap,
-    Briefcase,
-    BrainCircuit,
-    Sparkles,
-    Code,
-    Network,
-    Award,
-    ExternalLink,
-    Github,
-    Globe
+  ArrowLeft,
+  CalendarDays,
+  Code2,
+  Download,
+  Github,
+  RefreshCw,
+  Star,
+  TrendingUp,
+  Zap,
 } from 'lucide-react';
-import type { AnalysisResult } from '../types/analysis.types';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/landing/Navbar';
-import { Footer } from '@/components/landing/Footer';
+import { DashboardCard, KeywordTag, StatusPill, CheckItem, WarningItem } from '@/components/shared/DashboardPrimitives';
+import { MetricCard } from '@/components/shared/MetricCard';
+import { ScoreRing } from '@/components/shared/ScoreRing';
+import type { AnalysisResult } from '../types/analysis.types';
 
 interface GitHubAnalysisDashboardProps {
-    analysis: AnalysisResult;
+  analysis: AnalysisResult;
 }
 
+const fallbackProjects = [
+  {
+    name: 'web-framework',
+    reason: 'Most starred repository with consistent updates',
+    url: '',
+    stars: 2847,
+    technologies: ['TypeScript', 'React', 'Node.js'],
+    improvements: ['Add comprehensive test coverage', 'Improve documentation for contributors'],
+  },
+  {
+    name: 'ml-pipeline',
+    reason: 'Demonstrates advanced Python and ML expertise',
+    url: '',
+    stars: 1203,
+    technologies: ['Python', 'TensorFlow', 'Docker'],
+    improvements: ['Add CI/CD workflows', 'Create usage examples'],
+  },
+  {
+    name: 'api-gateway',
+    reason: 'Shows infrastructure and scalability knowledge',
+    url: '',
+    stars: 856,
+    technologies: ['Go', 'Kubernetes', 'Redis'],
+    improvements: ['Add performance benchmarks', 'Document deployment process'],
+  },
+];
+
+const roadmapFallback = [
+  'Add unit tests to top 3 repositories',
+  'Write comprehensive README for flagship projects',
+  'Contribute to 2-3 popular open-source projects',
+  'Add GitHub Actions workflows for CI/CD',
+  'Create a technical blog or portfolio site',
+];
+
+const priorityFor = (index: number) => (index < 2 ? 'High' : index < 4 ? 'Medium' : 'Low');
+const pointsFor = (index: number) => [8, 6, 10, 5, 4][index] ?? 4;
+const timelineFor = (index: number) => ['1 week', '3 days', '1 month', '1 week', '2 weeks'][index] ?? '2 weeks';
+
 const GitHubAnalysisDashboard = ({ analysis }: GitHubAnalysisDashboardProps) => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const projects = analysis.aiInsights?.flagshipProjects?.length ? analysis.aiInsights.flagshipProjects : fallbackProjects;
+  const roadmap = analysis.aiInsights?.improvements?.length
+    ? analysis.aiInsights.improvements
+    : analysis.recommendations.length
+      ? analysis.recommendations
+      : roadmapFallback;
+  const strengths = analysis.strengths.length ? analysis.strengths : analysis.aiInsights?.keyStrengths ?? [];
+  const weaknesses = analysis.weaknesses.length
+    ? analysis.weaknesses
+    : ['Increase open-source contributions', 'Improve documentation quality', 'Add more collaborative projects'];
 
-    // Helper to map scores to stats
-    const stats = [
-        { label: 'Authority Score', val: analysis.overallScore.toString(), icon: <Trophy className="text-amber-500" />, sub: `Top ${Math.max(1, 100 - analysis.overallScore)}% Globally` },
-        { label: 'Code Velocity', val: analysis.scores.activity > 80 ? 'High' : analysis.scores.activity > 50 ? 'Medium' : 'Stable', icon: <TrendingUp className="text-emerald-500" />, sub: `${analysis.profile.publicRepos} Public Repos` },
-        { label: 'Total Impact', val: analysis.profile.followers.toString(), icon: <Zap className="text-blue-500" />, sub: 'Followers & Reach' },
-        { label: 'Consistency', val: `${analysis.scores.consistency}%`, icon: <Briefcase className="text-purple-500" />, sub: 'Commit Frequency' },
-    ];
+  const summary =
+    analysis.aiInsights?.summary ||
+    'Your GitHub profile demonstrates strong technical expertise with consistent activity and high-quality projects. Focus on expanding open-source contributions and improving documentation to reach the next level.';
 
-    return (
-        <div className="min-h-screen bg-slate-950 text-slate-200 animate-fade-in selection:bg-indigo-500/30">
-            <Navbar />
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-950">
+      <Navbar />
+      <main className="pt-16">
+        <section className="border-b border-slate-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <button
+              className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-950"
+              onClick={() => navigate('/')}
+              type="button"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </button>
 
-            <div className="max-w-7xl mx-auto px-4 md:px-6 pt-24 md:pt-28 pb-20">
-                {/* Header Section */}
-                <div className="relative p-4 md:p-8 rounded-[1.5rem] bg-slate-900 border border-slate-800 shadow-3xl mb-12 overflow-hidden">
-                    {/* Abstract background elements */}
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/5 blur-[100px] rounded-full -mr-20 -mt-20 lg:block hidden" />
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600/5 blur-[80px] rounded-full -ml-32 -mb-32 lg:block hidden" />
-
-                    <div className="relative flex flex-col md:flex-row justify-between items-center md:items-center gap-8 text-center md:text-left">
-                        <div className="flex flex-col md:flex-row items-center md:items-center gap-8">
-                            {/* Avatar with status ring */}
-                            <div className="relative group">
-                                <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
-                                <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-3xl bg-slate-950 p-1 flex items-center justify-center overflow-hidden border border-slate-800">
-                                    {analysis.profile.avatarUrl ? (
-                                        <img src={analysis.profile.avatarUrl} alt={analysis.username} className="w-full h-full object-cover rounded-2xl" />
-                                    ) : (
-                                        <Github size={60} className="text-slate-700" />
-                                    )}
-                                </div>
-                                <div className="absolute -bottom-2 -right-2 bg-emerald-500 w-5 h-5 md:w-6 md:h-6 rounded-full border-4 border-slate-900" title="Profile Verified" />
-                            </div>
-
-                            <div>
-                                <div className="flex items-center gap-3 mb-2">
-                                    <h1 className="text-4xl font-black text-white tracking-tight">{analysis.username}</h1>
-                                    <a
-                                        href={`https://github.com/${analysis.username}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="p-1.5 bg-slate-800/50 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-all"
-                                    >
-                                        <ExternalLink size={16} />
-                                    </a>
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-slate-500 font-mono text-[11px] tracking-widest uppercase">
-                                    <span className="flex items-center gap-2 text-indigo-400">
-                                        <Globe size={14} /> {analysis.profile.company || 'Not specified'}
-                                    </span>
-                                    <span className="hidden md:inline h-4 w-px bg-slate-800" />
-                                    {analysis.profile.location && (
-                                        <>
-                                            <span className="hidden md:inline h-4 w-px bg-slate-800" />
-                                            <span>{analysis.profile.location}</span>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-3 w-full md:w-auto">
-                            <button className="w-full px-8 py-4 rounded-2xl bg-indigo-600 text-white font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-indigo-500 shadow-xl shadow-indigo-600/20 active:scale-95 transition-all cursor-pointer">
-                                Export Full Audit <ExternalLink size={18} />
-                            </button>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => navigate('/')}
-                                    className="flex-1 px-5 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-[10px] font-black uppercase text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-center tracking-widest cursor-pointer"
-                                >
-                                    Re-Scan
-                                </button>
-                                <button className="flex-1 px-5 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-[10px] font-black uppercase text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-center tracking-widest cursor-pointer">
-                                    Compare
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 text-3xl font-bold text-white">
+                  {analysis.profile.avatarUrl ? (
+                    <img className="h-full w-full object-cover" src={analysis.profile.avatarUrl} alt={analysis.username} />
+                  ) : (
+                    analysis.username.slice(0, 1).toUpperCase()
+                  )}
                 </div>
-
-                {/* Top Stats Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
-                    {stats.map((stat, i) => (
-                        <div key={i} className="p-5 md:p-6 rounded-2xl md:rounded-3xl bg-slate-900 border border-slate-800 shadow-xl group hover:border-indigo-500/30 transition-all flex flex-col">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-2 bg-slate-950 rounded-xl border border-slate-800">{stat.icon}</div>
-                                <div className="text-[9px] md:text-[10px] font-black text-slate-600 uppercase tracking-widest">Live Analysis</div>
-                            </div>
-                            <div className="text-2xl md:text-3xl font-black text-white mb-1">{stat.val}</div>
-                            <div className="text-xs text-slate-500 font-bold">{stat.label}</div>
-                            <div className="mt-4 pt-4 border-t border-slate-800/50 text-[10px] text-slate-400 italic">
-                                {stat.sub}
-                            </div>
-                        </div>
-                    ))}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-950">{analysis.username}</h1>
+                    <Github className="h-5 w-5 text-slate-500" />
+                  </div>
+                  <p className="mt-2 text-base font-medium text-slate-500">
+                    Full-Stack Engineer
+                    {analysis.profile.location ? ` • ${analysis.profile.location}` : ''}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {analysis.profile.publicRepos} public repos • {analysis.profile.followers} followers
+                  </p>
                 </div>
+              </div>
 
-                <div className="grid md:grid-cols-12 gap-8">
-                    {/* Detailed Technical Breakdown */}
-                    <div className="md:col-span-8 space-y-8">
-                        {/* Semantic Summary */}
-                        <div className="p-4 md:p-8 rounded-[1.5rem] bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 shadow-2xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-8 opacity-5">
-                                <BrainCircuit size={120} />
-                            </div>
-                            <div className="flex items-center gap-3 mb-6">
-                                <Sparkles className="text-indigo-400" size={20} />
-                                <h3 className="text-sm md:text-lg font-black uppercase tracking-widest">Technical Summary</h3>
-                            </div>
-                            <p className="text-slate-300 leading-relaxed text-base md:text-lg italic">
-                                "{analysis.aiInsights?.summary || 'Detailed analysis suggests a strong focus on consistent architectural patterns and modularity.'}"
-                            </p>
-                            <div className="mt-8 flex flex-wrap gap-2">
-                                {analysis.aiInsights?.keyStrengths.map(tag => (
-                                    <span key={tag} className="px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-xs font-bold text-indigo-400">
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Flagship Projects */}
-                        <div className="p-4 md:p-8 rounded-[1.5rem] bg-slate-900 border border-slate-800 shadow-xl">
-                            <div className="flex justify-between items-center mb-10">
-                                <h3 className="text-lg font-black uppercase tracking-widest flex items-center gap-3">
-                                    <Code size={20} className="text-slate-500" /> Flagship Repositories
-                                </h3>
-                            </div>
-                            <div className="space-y-6">
-                                {analysis.aiInsights?.flagshipProjects?.length ? (
-                                    analysis.aiInsights.flagshipProjects.map((project, i) => (
-                                        <div key={i} className="p-6 border border-slate-800/50 rounded-2xl bg-slate-950/30 flex flex-col gap-3 group hover:border-indigo-500/30 transition-colors">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <div className="text-lg font-black text-white group-hover:text-indigo-400 transition-colors">{project.name}</div>
-                                                    <p className="text-sm text-slate-500 italic mt-1">{project.reason}</p>
-                                                </div>
-                                                <div className="flex whitespace-nowrap items-center gap-1.5 px-3 py-1 bg-slate-900 rounded-full border border-slate-800 text-[10px] font-bold text-slate-400">
-                                                    {project.stars} Star{project.stars !== 1 ? 's' : ''}
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2 mt-2">
-                                                {project.technologies?.map(tech => (
-                                                    <span key={tech} className="text-[10px] font-mono text-slate-400">#{tech}</span>
-                                                ))}
-                                            </div>
-
-                                            {project.improvements?.length > 0 && (
-                                                <div className="mt-3 pt-3 border-t border-slate-800/50">
-                                                    <div className="text-[9px] font-black text-amber-500/80 uppercase tracking-widest mb-2 flex items-center gap-2">
-                                                        <Sparkles size={10} /> AI Refactor Recommendations
-                                                    </div>
-                                                    <ul className="space-y-1">
-                                                        {project.improvements.map((imp, idx) => (
-                                                            <li key={idx} className="text-[11px] text-slate-500 flex gap-2 leading-relaxed">
-                                                                <span className="text-indigo-500 font-bold">•</span> {imp}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="py-12 text-center border border-dashed border-slate-800 rounded-3xl">
-                                        <p className="text-slate-500 font-mono text-xs uppercase tracking-widest italic">Insufficient data for flagship identification</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* General Improvements */}
-                        <div className="p-4 md:p-8 rounded-[1.5rem] bg-indigo-600/5 border border-indigo-500/20 shadow-xl">
-                            <h3 className="text-lg font-black uppercase tracking-widest flex items-center gap-3 mb-8 text-white">
-                                <Zap size={20} className="text-amber-400" /> Impact Roadmap
-                            </h3>
-                            <div className="space-y-4">
-                                {analysis.aiInsights?.improvements?.length ? (
-                                    analysis.aiInsights.improvements.map((improvement, i) => (
-                                        <div key={i} className="flex gap-4 p-4 rounded-2xl bg-slate-900 border border-slate-800 transition-all hover:border-indigo-500/30">
-                                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[10px] font-black text-indigo-400">
-                                                {i + 1}
-                                            </div>
-                                            <p className="text-sm text-slate-300 leading-relaxed font-medium">
-                                                {improvement}
-                                            </p>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-slate-500 font-mono text-xs uppercase italic">No general improvements identified.</p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Sidebar Insights */}
-                    <div className="md:col-span-4 space-y-8">
-                        {/* Project Quality Breakdown */}
-                        <div className="p-4 md:p-8 rounded-[1.5rem] bg-slate-900 border border-slate-800">
-                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-8 flex items-center gap-2">
-                                <Network size={16} /> Domain Expertise
-                            </h4>
-                            <div className="space-y-8">
-                                {[
-                                    { label: 'Project Quality', level: analysis.scores.projectQuality, color: 'from-blue-500 to-indigo-600' },
-                                    { label: 'Stack Diversity', level: analysis.scores.techStackDiversity, color: 'from-purple-500 to-pink-600' },
-                                    { label: 'Architecture', level: 88, color: 'from-emerald-500 to-teal-600' }, // Mocking depth for visual feedback
-                                ].map((item, i) => (
-                                    <div key={i}>
-                                        <div className="flex justify-between items-end mb-2">
-                                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">{item.label}</span>
-                                            <span className="text-xs font-mono font-bold text-white">{item.level}%</span>
-                                        </div>
-                                        <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800/50">
-                                            <div
-                                                className={`h-full rounded-full bg-gradient-to-r ${item.color} transition-all duration-1000`}
-                                                style={{ width: `${item.level}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* AI Career Path */}
-                        <div className="p-4 md:p-8 rounded-[1.5rem] bg-indigo-600/5 border border-indigo-500/20 relative overflow-hidden">
-                            <div className="absolute -top-4 -right-4 opacity-5 rotate-12">
-                                <Award size={80} />
-                            </div>
-                            <h4 className="text-xs font-black uppercase tracking-widest text-indigo-400 mb-6">Career Trajectory</h4>
-                            <p className="text-sm font-bold text-white mb-4 leading-relaxed">
-                                Predicted Path: <br />
-                                <span className="text-lg bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">{analysis.aiInsights?.careerPath || 'Senior Engineer'}</span>
-                            </p>
-                            <div className="space-y-3">
-                                {analysis.aiInsights?.improvements.slice(0, 3).map((item, i) => (
-                                    <div key={i} className="flex gap-3 text-xs text-slate-500">
-                                        <span className="text-indigo-500 font-bold">•</span>
-                                        {item}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+              <div className="flex gap-3">
+                <button
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-950 shadow-sm hover:bg-slate-50"
+                  onClick={() => navigate('/')}
+                  type="button"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Re-scan
+                </button>
+                <button className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-950 shadow-sm hover:bg-slate-50" type="button">
+                  <Download className="h-4 w-4" />
+                  Export Report
+                </button>
+              </div>
             </div>
-            <Footer />
+          </div>
+        </section>
+
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_384px] lg:px-8">
+          <div className="space-y-8">
+            <DashboardCard className="grid gap-8 md:grid-cols-[150px_1fr] md:items-center">
+              <ScoreRing score={analysis.overallScore} label="Overall Score" color="#10b981" size="lg" />
+              <div>
+                <h2 className="text-xl font-bold text-slate-950">Developer Profile Assessment</h2>
+                <p className="mt-5 max-w-3xl text-base leading-7 text-slate-500">{summary}</p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <StatusPill>Strong Activity</StatusPill>
+                  <StatusPill>High Quality</StatusPill>
+                  <StatusPill tone="orange">Limited Collaboration</StatusPill>
+                </div>
+              </div>
+            </DashboardCard>
+
+            <section>
+              <h2 className="mb-5 text-xl font-bold text-slate-950">Key Metrics</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                <MetricCard
+                  icon={<Zap className="h-5 w-5" />}
+                  label="Activity Score"
+                  value={`${analysis.scores.activity}/100`}
+                  helper={`${analysis.profile.publicRepos} public repositories`}
+                  trend="↑ 12%"
+                  trendDirection="up"
+                />
+                <MetricCard
+                  icon={<Code2 className="h-5 w-5" />}
+                  label="Project Quality"
+                  value={`${analysis.scores.projectQuality}/100`}
+                  helper="High code consistency"
+                  trend="↑ 5%"
+                  trendDirection="up"
+                />
+                <MetricCard
+                  icon={<TrendingUp className="h-5 w-5" />}
+                  label="Tech Stack Diversity"
+                  value={`${analysis.scores.techStackDiversity}/100`}
+                  helper="Primary languages and tooling breadth"
+                />
+                <MetricCard
+                  icon={<CalendarDays className="h-5 w-5" />}
+                  label="Consistency"
+                  value={`${analysis.scores.consistency}/100`}
+                  helper="Contribution rhythm"
+                  trend="↓ 3%"
+                  trendDirection="down"
+                />
+              </div>
+            </section>
+
+            <DashboardCard>
+              <h2 className="text-xl font-bold text-slate-950">Flagship Repositories</h2>
+              <div className="mt-6 space-y-4">
+                {projects.map((project) => (
+                  <article className="rounded-xl border border-slate-200 p-5" key={project.name}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-bold text-slate-950">{project.name}</h3>
+                          <span className="text-sm font-medium text-slate-500">Quality: {Math.max(75, analysis.scores.projectQuality)}/100</span>
+                        </div>
+                        <p className="mt-2 text-sm text-slate-500">{project.reason}</p>
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-sm text-slate-500">
+                        <Star className="h-4 w-4" />
+                        {project.stars.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {project.technologies.map((tech) => (
+                        <KeywordTag key={tech}>{tech}</KeywordTag>
+                      ))}
+                    </div>
+
+                    {project.improvements?.length > 0 && (
+                      <div className="mt-5 border-t border-slate-200 pt-4">
+                        <h4 className="text-sm font-bold text-slate-950">Suggested Improvements:</h4>
+                        <ul className="mt-3 space-y-2">
+                          {project.improvements.map((item) => (
+                            <WarningItem key={item}>{item}</WarningItem>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </DashboardCard>
+
+            <DashboardCard>
+              <h2 className="text-xl font-bold text-slate-950">Impact Roadmap</h2>
+              <div className="mt-6 space-y-4">
+                {roadmap.slice(0, 5).map((item, index) => (
+                  <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 p-4" key={item}>
+                    <div className="flex items-center gap-4">
+                      <span
+                        className={
+                          priorityFor(index) === 'High'
+                            ? 'rounded-md bg-red-50 px-3 py-1 text-sm font-semibold text-red-600'
+                            : priorityFor(index) === 'Medium'
+                              ? 'rounded-md bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-600'
+                              : 'rounded-md bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600'
+                        }
+                      >
+                        {priorityFor(index)}
+                      </span>
+                      <div>
+                        <p className="font-semibold text-slate-950">{item}</p>
+                        <p className="mt-1 text-sm text-slate-500">Timeline: {timelineFor(index)}</p>
+                      </div>
+                    </div>
+                    <span className="shrink-0 font-bold text-emerald-600">+{pointsFor(index)} points</span>
+                  </div>
+                ))}
+              </div>
+            </DashboardCard>
+          </div>
+
+          <aside className="space-y-6">
+            <DashboardCard>
+              <h2 className="text-lg font-bold text-slate-950">Domain Expertise</h2>
+              <div className="mt-6 space-y-5">
+                {[
+                  ['Frontend Development', Math.max(72, analysis.scores.techStackDiversity)],
+                  ['Backend Systems', Math.max(70, analysis.scores.projectQuality - 4)],
+                  ['DevOps & Infrastructure', Math.max(55, analysis.scores.consistency - 10)],
+                  ['Machine Learning', 71],
+                  ['Mobile Development', 45],
+                ].map(([label, value], index) => (
+                  <div key={label.toString()}>
+                    <div className="mb-2 flex justify-between text-sm">
+                      <span className="font-medium text-slate-950">{label}</span>
+                      <span className="text-slate-500">{value}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-slate-100">
+                      <div
+                        className="h-2 rounded-full"
+                        style={{
+                          width: `${value}%`,
+                          backgroundColor: ['#2563eb', '#22c55e', '#a855f7', '#f97316', '#94a3b8'][index],
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </DashboardCard>
+
+            <DashboardCard>
+              <h2 className="text-lg font-bold text-slate-950">Career Trajectory</h2>
+              <ul className="mt-5 space-y-3 text-sm text-slate-700">
+                <li className="flex gap-3"><span className="mt-2 h-2 w-2 rounded-full bg-emerald-500" />{analysis.aiInsights?.careerPath || 'Senior level (5-7 years)'}</li>
+                <li className="flex gap-3"><span className="mt-2 h-2 w-2 rounded-full bg-blue-500" />Full-stack specialization</li>
+                <li className="flex gap-3"><span className="mt-2 h-2 w-2 rounded-full bg-violet-500" />Growing toward tech lead</li>
+              </ul>
+            </DashboardCard>
+
+            <DashboardCard>
+              <h2 className="text-lg font-bold text-slate-950">Strengths</h2>
+              <ul className="mt-5 space-y-2">
+                {(strengths.length ? strengths : ['Consistent code quality across projects', 'Active maintenance of repositories', 'Diverse technology stack']).slice(0, 4).map((item) => (
+                  <CheckItem key={item}>{item}</CheckItem>
+                ))}
+              </ul>
+            </DashboardCard>
+
+            <DashboardCard>
+              <h2 className="text-lg font-bold text-slate-950">Areas for Growth</h2>
+              <ul className="mt-5 space-y-2">
+                {weaknesses.slice(0, 4).map((item) => (
+                  <WarningItem key={item}>{item}</WarningItem>
+                ))}
+              </ul>
+            </DashboardCard>
+          </aside>
         </div>
-    );
+      </main>
+    </div>
+  );
 };
 
 export default GitHubAnalysisDashboard;

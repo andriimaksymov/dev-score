@@ -6,11 +6,11 @@ test.describe('Landing Page', () => {
     });
 
     test('has correct title', async ({ page }) => {
-        await expect(page).toHaveTitle(/SparkFolio/);
+        await expect(page).toHaveTitle(/DevScore/);
     });
 
     test('displays main headline', async ({ page }) => {
-        await expect(page.getByText('Dev Profile, Scored')).toBeVisible();
+        await expect(page.getByText('Your Complete Developer Profile Analysis')).toBeVisible();
     });
 
     test('navigation works', async ({ page }) => {

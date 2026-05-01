@@ -19,17 +19,16 @@ describe('Navbar Component', () => {
             </MemoryRouter>
         );
         expect(screen.getByText(/How It Works/i)).toBeInTheDocument();
-        expect(screen.getByText(/Analyzer/i)).toBeInTheDocument();
-        expect(screen.getByText(/Architecture/i)).toBeInTheDocument();
+        expect(screen.getByText(/Home/i)).toBeInTheDocument();
+        expect(screen.getByText(/Privacy/i)).toBeInTheDocument();
     });
 
-    it('renders the source code link', () => {
+    it('renders the primary action', () => {
         render(
             <MemoryRouter>
                 <Navbar />
             </MemoryRouter>
         );
-        const sourceLink = screen.getByText(/Source/i).closest('a');
-        expect(sourceLink).toHaveAttribute('href', 'https://github.com/andriimaksymov');
+        expect(screen.getByRole('button', { name: /Get Started/i })).toBeInTheDocument();
     });
 });

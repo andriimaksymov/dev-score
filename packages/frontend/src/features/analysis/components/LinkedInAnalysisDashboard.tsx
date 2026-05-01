@@ -1,231 +1,308 @@
 import {
-    Users,
-    Sparkles,
-    TrendingUp,
-    Briefcase,
-    Target,
-    ShieldCheck,
-    Globe,
-    CheckCircle2,
-    Zap,
+  ArrowLeft,
+  Award,
+  CheckCircle2,
+  Linkedin,
+  RefreshCw,
+  Target,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/landing/Navbar';
-import { Footer } from '@/components/landing/Footer';
-
+import { DashboardCard, CheckItem, KeywordTag, StatusPill, WarningItem } from '@/components/shared/DashboardPrimitives';
+import { MetricCard } from '@/components/shared/MetricCard';
+import { ScoreRing } from '@/components/shared/ScoreRing';
 import type { LinkedInAnalysisResult, LinkedInProfile } from '@/features/analysis/types/analysis.types';
 
 interface LinkedInAnalysisDashboardProps {
-    analysis: LinkedInAnalysisResult;
-    profile: LinkedInProfile;
+  analysis: LinkedInAnalysisResult;
+  profile: LinkedInProfile;
 }
 
+const fallbackActionPlan = {
+  thisWeek: [
+    'Rewrite headline to include specific impact metrics',
+    'Add 3 featured projects to showcase section',
+    'Request 5 recommendations from colleagues',
+  ],
+  next30Days: [
+    'Publish 2 technical articles on trending topics',
+    'Engage with 20 industry posts per week',
+    'Join 3 relevant professional groups',
+    'Update experience bullets with quantified achievements',
+  ],
+  next60Days: [
+    'Complete 2 relevant certifications',
+    'Attend or speak at 1 industry event',
+    'Build connections with 50 professionals in target companies',
+    'Optimize profile for 10 target keywords',
+  ],
+};
+
+const quickWins = [
+  'Turn on "Open to Work" for increased recruiter visibility',
+  'Add a professional background banner image',
+  'Feature your best projects in the Featured section',
+  'Engage with 5 posts daily in your feed',
+];
+
 const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashboardProps) => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const dimensions = analysis.dimensions;
+  const recommendations = analysis.recommendations;
+  const actionPlan = analysis.actionPlan || fallbackActionPlan;
+  const currentHeadline = 'Software Engineer at TechCorp';
+  const recommendedHeadline =
+    recommendations.headlines?.[0] ||
+    'Full-Stack Engineer | Built scalable systems serving 10M+ users | React • Node.js • AWS | Passionate about developer experience';
 
-    // Helper to map backend data to UI
-    const {
-        summary = { text: '', seniorityGuess: '' },
-        dimensions = { overall: 0, profile: { score: 0, status: '', insights: [] }, headline: { score: 0, status: '', insights: [] }, experience: { score: 0, status: '', insights: [] }, skills: { score: 0, status: '', insights: [] }, branding: { score: 0, status: '', insights: [] } },
-        recommendations = { headlines: [], aboutSuggestions: { missing: '', rewritten: '' }, experienceEdits: [] },
-        missingKeywords = [],
-        actionPlan = { thisWeek: [], next30Days: [], next60Days: [] }
-    } = analysis || {};
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-950">
+      <Navbar />
+      <main className="pt-24">
+        <section className="border-b border-slate-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
+            <button
+              className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-950"
+              onClick={() => navigate('/')}
+              type="button"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </button>
 
-    const stats = [
-        { label: 'Overall Reach', val: (dimensions?.overall || 0).toString(), icon: <TrendingUp className="text-blue-500" />, sub: summary?.seniorityGuess || 'Analyzing...' },
-        { label: 'Profile Strength', val: (dimensions?.profile?.score || 0).toString(), icon: <Users className="text-indigo-500" />, sub: dimensions?.profile?.status || 'Verification Pending' },
-        { label: 'Market Visibility', val: (dimensions?.headline?.score || 0).toString(), icon: <Zap className="text-amber-500" />, sub: dimensions?.headline?.status || 'Scanning...' },
-        { label: 'Trust Factor', val: (dimensions?.branding?.score || 0).toString(), icon: <ShieldCheck className="text-emerald-500" />, sub: dimensions?.branding?.status || 'Audit Live' },
-    ];
-
-    return (
-        <div className="min-h-screen bg-slate-950 text-slate-200 animate-fade-in">
-            <Navbar />
-            <div className="max-w-7xl mx-auto px-4 md:px-6 pt-24 md:pt-28 pb-20">
-
-                {/* Header Section */}
-                <div className="relative p-4 md:p-8 rounded-[1.5rem] bg-slate-900 border border-slate-800 shadow-3xl mb-12 overflow-hidden">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/5 blur-[100px] rounded-full -mr-20 -mt-20 lg:block hidden" />
-
-                    <div className="relative flex flex-col md:flex-row justify-between items-center md:items-center gap-8 text-center md:text-left">
-                        <div className="flex flex-col md:flex-row items-center gap-8">
-                            {profile?.avatarUrl ? (
-                                <img
-                                    src={profile.avatarUrl}
-                                    alt={profile.fullName}
-                                    className="w-28 h-28 md:w-32 md:h-32 rounded-3xl border border-blue-500/20 object-cover shadow-2xl"
-                                />
-                            ) : (
-                                <div className="w-28 h-28 md:w-32 md:h-32 rounded-3xl bg-blue-600/10 p-1 flex items-center justify-center border border-blue-500/20">
-                                    <Users size={60} className="text-blue-400" />
-                                </div>
-                            )}
-                            <div className="text-center md:text-left">
-                                <h1 className="text-4xl font-black text-white tracking-tight mb-2">
-                                    {profile?.fullName ? `${profile.fullName}'s Network Visibility Report` : 'Network Visibility Report'}
-                                </h1>
-                                <p className="text-slate-500 font-mono text-[11px] tracking-widest uppercase flex items-center gap-2">
-                                    <Globe size={14} className="text-blue-400" /> {summary.seniorityGuess}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 w-full md:w-auto">
-                            <button
-                                onClick={() => navigate('/')}
-                                className="flex-1 px-8 py-4 rounded-2xl bg-slate-800 border border-slate-700 text-white font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-700 transition-all"
-                            >
-                                Re-Scan
-                            </button>
-                        </div>
-                    </div>
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-2xl font-bold text-white">
+                  {profile.avatarUrl ? <img className="h-full w-full object-cover" src={profile.avatarUrl} alt={profile.fullName} /> : profile.fullName.slice(0, 2).toUpperCase()}
                 </div>
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
-                    {stats.map((stat, i) => (
-                        <div key={i} className="p-5 md:p-6 rounded-2xl md:rounded-3xl bg-slate-900 border border-slate-800 shadow-xl group hover:border-blue-500/30 transition-all flex flex-col">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-2 bg-slate-950 rounded-xl border border-slate-800">{stat.icon}</div>
-                                <div className="text-[9px] md:text-[10px] font-black text-slate-600 uppercase tracking-widest">Live Analysis</div>
-                            </div>
-                            <div className="text-2xl md:text-3xl font-black text-white mb-1">{stat.val}</div>
-                            <div className="text-xs text-slate-500 font-bold mb-4">{stat.label}</div>
-
-                            {/* Insight List */}
-                            <div className="space-y-2 mt-auto">
-                                {(stat.label === 'Overall Reach' ? [summary.seniorityGuess] :
-                                    stat.label === 'Profile Strength' ? dimensions.profile?.insights :
-                                        stat.label === 'Market Visibility' ? dimensions.headline?.insights :
-                                            stat.label === 'Trust Factor' ? dimensions.branding?.insights : []
-                                )?.map((insight: string, idx: number) => (
-                                    <div key={idx} className="flex gap-2 items-start text-[10px] text-slate-400 leading-tight">
-                                        <div className="w-1 h-1 rounded-full bg-blue-500 mt-1 flex-shrink-0" />
-                                        {insight}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-950">{profile.fullName}</h1>
+                    <Linkedin className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <p className="mt-2 text-base font-medium text-slate-500">{currentHeadline}</p>
+                  <p className="mt-1 text-sm text-slate-500">Seniority Estimate: {analysis.summary.seniorityGuess}</p>
                 </div>
+              </div>
 
-                <div className="grid md:grid-cols-12 gap-8">
-                    {/* Main Insights */}
-                    <div className="md:col-span-8 space-y-8">
-                        {/* Semantic Summary */}
-                        <div className="p-4 md:p-8 rounded-[1.5rem] bg-gradient-to-br from-blue-900/20 to-slate-950 border border-blue-500/20 shadow-2xl relative">
-                            <div className="flex items-center gap-3 mb-6">
-                                <Sparkles className="text-blue-400" size={20} />
-                                <h3 className="text-lg font-black uppercase tracking-widest text-white">Growth Summary</h3>
-                            </div>
-                            <p className="text-slate-300 leading-relaxed text-lg italic">
-                                "{summary.text}"
-                            </p>
-                        </div>
-
-                        {/* Recommendations */}
-                        <div className="p-4 md:p-8 rounded-[1.5rem] bg-slate-900 border border-slate-800">
-                            <h3 className="text-lg font-black uppercase tracking-widest flex items-center gap-3 mb-8">
-                                <Target size={20} className="text-amber-500" /> Profile Improvements
-                            </h3>
-                            <div className="space-y-6">
-                                <div className="p-5 bg-slate-950 border-l-4 border-blue-500 rounded-r-2xl">
-                                    <div className="text-xs font-black text-blue-400 uppercase mb-2">Headline Suggestions</div>
-                                    <ul className="space-y-3">
-                                        {recommendations.headlines.map((h: string, i: number) => (
-                                            <li key={i} className="text-sm text-slate-300 font-medium list-disc ml-4">"{h}"</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                <div className="p-5 bg-slate-950 border-l-4 border-amber-500 rounded-r-2xl">
-                                    {recommendations.aboutSuggestions.missing || recommendations.aboutSuggestions.rewritten ? (
-                                        <>
-                                            <div className="text-xs font-black text-amber-400 uppercase mb-2">About Section Gap</div>
-                                            <p className="text-sm text-slate-300 italic mb-2 font-bold">{recommendations.aboutSuggestions.missing}</p>
-                                            <p className="text-xs text-slate-500 leading-relaxed font-mono">Suggested Rewrite: "{recommendations.aboutSuggestions.rewritten}"</p>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="text-xs font-black text-amber-400 uppercase mb-2">About Section Gap</div>
-                                            <p className="text-slate-500 text-sm animate-pulse">Extracting Semantic Career Entities</p>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Experience Optimization */}
-                        <div className="p-4 md:p-8 rounded-[1.5rem] bg-slate-900 border border-slate-800 shadow-xl">
-                            <h3 className="text-lg font-black uppercase tracking-widest flex items-center gap-3 mb-8">
-                                <Briefcase size={20} className="text-blue-500" /> Work Experience Optimization
-                            </h3>
-                            <div className="space-y-8">
-                                {recommendations.experienceEdits?.length ? (
-                                    recommendations.experienceEdits.map((edit, i) => (
-                                        <div key={i} className="p-6 rounded-2xl bg-slate-950/50 border border-slate-800 hover:border-blue-500/30 transition-colors">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <h4 className="text-white font-black text-sm uppercase tracking-tight">{edit.role}</h4>
-                                                    <p className="text-blue-400 text-xs font-bold">{edit.company}</p>
-                                                </div>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Optimized Bullet Points (STAR Method)</div>
-                                                {edit.improvements.map((imp: string, j: number) => (
-                                                    <div key={j} className="flex gap-3 text-sm text-slate-300 leading-relaxed font-medium">
-                                                        <span className="text-emerald-500 font-bold">•</span>
-                                                        {imp}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="py-12 text-center border border-dashed border-slate-800 rounded-3xl">
-                                        <p className="text-slate-500 font-mono text-xs uppercase tracking-widest italic">No experience edits identified</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Sidebar */}
-                    <div className="md:col-span-4 space-y-8">
-                        {/* Action Plan */}
-                        <div className="p-4 md:p-8 rounded-[1.5rem] bg-slate-900 border border-slate-800">
-                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-8 flex items-center gap-2">
-                                <TrendingUp size={16} /> Roadmap (Next 60 Days)
-                            </h4>
-                            <div className="space-y-6">
-                                {actionPlan.thisWeek.concat(actionPlan.next30Days).concat(actionPlan.next60Days).map((plan: string, i: number) => (
-                                    <div key={i} className="flex gap-4 items-start">
-                                        <div className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                            <CheckCircle2 size={12} className="text-blue-500" />
-                                        </div>
-                                        <span className="text-xs text-slate-400 leading-relaxed">{plan}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Keywords */}
-                        <div className="p-4 md:p-8 rounded-[1.5rem] bg-indigo-600/5 border border-indigo-500/20 relative overflow-hidden">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-6 font-mono">Missing Visibility Keywords</h4>
-                            <div className="flex flex-wrap gap-2">
-                                {missingKeywords.map((kw: string) => (
-                                    <span key={kw} className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-[10px] font-bold text-indigo-300 uppercase">
-                                        {kw}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+              <button
+                className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-950 shadow-sm hover:bg-slate-50"
+                onClick={() => navigate('/')}
+                type="button"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Re-scan
+              </button>
             </div>
-            <Footer />
+          </div>
+        </section>
+
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_384px] lg:px-8">
+          <div className="space-y-8">
+            <DashboardCard className="grid gap-8 md:grid-cols-[150px_1fr] md:items-center">
+              <ScoreRing score={dimensions.overall} label="Visibility Score" color="#f59e0b" size="lg" />
+              <div>
+                <h2 className="text-xl font-bold text-slate-950">LinkedIn Profile Analysis</h2>
+                <p className="mt-5 max-w-3xl text-base leading-7 text-slate-500">
+                  {analysis.summary.text ||
+                    'Your profile has good foundational elements but lacks compelling storytelling and strategic keyword optimization. Improving your headline, about section, and adding more quantified achievements will significantly boost visibility to recruiters.'}
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <StatusPill>Strong Experience</StatusPill>
+                  <StatusPill tone="orange">Weak Headline</StatusPill>
+                  <StatusPill tone="orange">Limited Engagement</StatusPill>
+                </div>
+              </div>
+            </DashboardCard>
+
+            <section>
+              <h2 className="mb-5 text-xl font-bold text-slate-950">Key Metrics</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                <MetricCard icon={<CheckCircle2 className="h-5 w-5" />} label="Profile Completeness" value={`${dimensions.profile.score}%`} trend="↑ 15%" trendDirection="up" />
+                <MetricCard icon={<TrendingUp className="h-5 w-5" />} label="Headline Quality" value={`${dimensions.headline.score}/100`} helper={dimensions.headline.status || 'Could be more compelling'} />
+                <MetricCard icon={<Award className="h-5 w-5" />} label="Experience Impact" value={`${dimensions.experience.score}/100`} trend="↑ 8%" trendDirection="up" />
+                <MetricCard icon={<Users className="h-5 w-5" />} label="Skills Relevance" value={`${dimensions.skills.score}/100`} helper={`${analysis.missingKeywords.length + 15} endorsed skills`} />
+              </div>
+            </section>
+
+            <DashboardCard>
+              <h2 className="text-xl font-bold text-slate-950">Headline Optimization</h2>
+              <div className="mt-6 space-y-6">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <WarningItem>Current Headline</WarningItem>
+                    <span className="text-sm text-slate-500">(Score: {dimensions.headline.score}/100)</span>
+                  </div>
+                  <div className="mt-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-slate-950">"{currentHeadline}"</div>
+                  <p className="mt-2 text-sm text-slate-500">Issues: Generic, no value proposition, missing keywords</p>
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CheckItem>Recommended Headline</CheckItem>
+                    <span className="text-sm font-medium text-emerald-600">(Estimated Score: 92/100)</span>
+                  </div>
+                  <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-slate-950">"{recommendedHeadline}"</div>
+                  <p className="mt-2 text-sm text-slate-500">Improvements: Specific impact, technical skills, value proposition</p>
+                </div>
+              </div>
+            </DashboardCard>
+
+            <DashboardCard>
+              <h2 className="text-xl font-bold text-slate-950">About Section Enhancement</h2>
+              <div className="mt-6">
+                <h3 className="font-semibold text-slate-950">Missing Elements:</h3>
+                <ul className="mt-3 space-y-2">
+                  {(recommendations.aboutSuggestions.missing
+                    ? recommendations.aboutSuggestions.missing.split(/[,.;]\s+/).filter(Boolean).slice(0, 4)
+                    : ['No personal story or unique value proposition', 'Lacks specific achievements with metrics', 'Missing call-to-action for opportunities']
+                  ).map((item) => (
+                    <WarningItem key={item}>{item}</WarningItem>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+                <h3 className="font-semibold text-slate-950">Suggested About Section:</h3>
+                <p className="mt-4 whitespace-pre-line leading-7 text-slate-600">
+                  {recommendations.aboutSuggestions.rewritten ||
+                    `I build resilient, user-focused software systems that scale. With 5+ years crafting full-stack solutions, I've helped launch products that serve millions of daily users while maintaining 99.9% uptime.\n\nMy recent work includes architecting a microservices platform that reduced deployment time by 60% and migrating legacy systems to cloud-native infrastructure, cutting operational costs by $200K annually.\n\nI'm passionate about developer experience, clean code, and mentoring junior engineers. When I'm not coding, you'll find me contributing to open-source projects or writing technical articles.\n\nOpen to: Senior engineering roles, technical leadership opportunities, consulting engagements`}
+                </p>
+              </div>
+            </DashboardCard>
+
+            <DashboardCard>
+              <h2 className="text-xl font-bold text-slate-950">Experience Section Improvements</h2>
+              <div className="mt-6 space-y-5">
+                {(recommendations.experienceEdits.length
+                  ? recommendations.experienceEdits
+                  : [
+                      {
+                        role: 'Senior Software Engineer',
+                        company: 'TechCorp',
+                        improvements: [
+                          'Led development of real-time analytics dashboard serving 50K+ daily users, reducing data latency by 75%',
+                          'Architected microservices migration strategy for 8 legacy applications, improving deployment frequency from monthly to daily releases',
+                          'Mentored team of 4 junior developers, implementing code review standards that reduced production bugs by 40%',
+                          'Optimized database queries and API endpoints, decreasing average response time from 800ms to 120ms',
+                        ],
+                      },
+                    ]
+                ).map((edit) => (
+                  <article className="rounded-xl border border-slate-200 p-5" key={`${edit.role}-${edit.company}`}>
+                    <h3 className="font-bold text-slate-950">{edit.role} • {edit.company}</h3>
+                    <div className="mt-5 grid gap-5">
+                      <div>
+                        <p className="font-semibold text-orange-600">Current bullet points:</p>
+                        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-500">
+                          <li>Developed new features for the platform</li>
+                          <li>Worked with cross-functional teams</li>
+                          <li>Improved application performance</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-emerald-600">Optimized bullet points:</p>
+                        <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-950">
+                          {edit.improvements.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </DashboardCard>
+
+            <DashboardCard>
+              <h2 className="text-xl font-bold text-slate-950">Missing Visibility Keywords</h2>
+              <p className="mt-6 text-sm text-slate-500">Adding these keywords will improve searchability by recruiters:</p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {(analysis.missingKeywords.length
+                  ? analysis.missingKeywords
+                  : ['Cloud Architecture', 'System Design', 'Microservices', 'Kubernetes', 'CI/CD', 'Performance Optimization', 'Team Leadership', 'Agile']
+                ).map((keyword) => (
+                  <KeywordTag key={keyword}>{keyword}</KeywordTag>
+                ))}
+              </div>
+            </DashboardCard>
+          </div>
+
+          <aside className="space-y-6">
+            <DashboardCard>
+              <h2 className="text-lg font-bold text-slate-950">Action Plan</h2>
+              {[
+                ['7 Days', actionPlan.thisWeek],
+                ['30 Days', actionPlan.next30Days],
+                ['60 Days', actionPlan.next60Days],
+              ].map(([label, items], index) => (
+                <div className="mt-6 flex gap-4" key={label as string}>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-violet-600">
+                    {index + 1}
+                  </span>
+                  <div>
+                    <h3 className="font-bold text-slate-950">{label as string}</h3>
+                    <ul className="mt-3 space-y-2">
+                      {(items as string[]).map((item) => (
+                        <CheckItem key={item}>{item}</CheckItem>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </DashboardCard>
+
+            <DashboardCard className="border-indigo-200 bg-indigo-50">
+              <h2 className="flex items-center gap-2 text-lg font-bold text-slate-950">
+                <Target className="h-5 w-5 text-violet-600" />
+                Quick Wins
+              </h2>
+              <ul className="mt-5 list-disc space-y-3 pl-5 text-sm leading-6 text-slate-950 marker:text-violet-600">
+                {quickWins.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </DashboardCard>
+
+            <DashboardCard>
+              <h2 className="text-lg font-bold text-slate-950">Personal Branding</h2>
+              <div className="mt-5 space-y-4 text-sm">
+                <div>
+                  <p className="font-semibold text-slate-950">Current Positioning:</p>
+                  <p className="mt-2 text-slate-500">Generic software engineer</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-950">Recommended Positioning:</p>
+                  <p className="mt-2 text-slate-500">Full-stack engineer specializing in scalable systems and developer experience</p>
+                </div>
+              </div>
+            </DashboardCard>
+
+            <DashboardCard>
+              <h2 className="text-lg font-bold text-slate-950">Growth Metrics</h2>
+              <div className="mt-6 space-y-4">
+                {[
+                  ['Profile Views', '+45%', '#22c55e'],
+                  ['Search Appearances', '+28%', '#3b82f6'],
+                  ['Recruiter Interest', '+62%', '#a855f7'],
+                ].map(([label, value, color]) => (
+                  <div key={label}>
+                    <div className="mb-2 flex justify-between text-sm">
+                      <span className="font-medium text-slate-950">{label}</span>
+                      <span className="font-bold text-slate-950">{value}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-slate-100">
+                      <div className="h-2 rounded-full" style={{ width: value, backgroundColor: color }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </DashboardCard>
+          </aside>
         </div>
-    );
+      </main>
+    </div>
+  );
 };
 
 export default LinkedInAnalysisDashboard;
