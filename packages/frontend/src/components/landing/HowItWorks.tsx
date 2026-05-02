@@ -5,11 +5,13 @@ const steps = [
   },
   {
     title: 'AI-Powered Analysis',
-    description: 'Our engine evaluates code quality, career trajectory, visibility, and positioning',
+    description:
+      'Our engine evaluates code quality, career trajectory, visibility, and positioning',
   },
   {
     title: 'Get Actionable Insights',
-    description: 'Review your score, identify gaps, and follow personalized improvement recommendations',
+    description:
+      'Review your score, identify gaps, and follow personalized improvement recommendations',
   },
 ];
 

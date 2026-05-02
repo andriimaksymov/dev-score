@@ -23,7 +23,12 @@ export function ScoreRing({ score, label, color = '#7c3aed', size = 'md' }: Scor
   return (
     <div className="flex flex-col items-center justify-center gap-3">
       <div className="relative" style={{ width: config.box, height: config.box }}>
-        <svg className="-rotate-90" width={config.box} height={config.box} viewBox={`0 0 ${config.box} ${config.box}`}>
+        <svg
+          className="-rotate-90"
+          width={config.box}
+          height={config.box}
+          viewBox={`0 0 ${config.box} ${config.box}`}
+        >
           <circle
             cx={center}
             cy={center}
@@ -45,7 +50,9 @@ export function ScoreRing({ score, label, color = '#7c3aed', size = 'md' }: Scor
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className={cn('font-bold tracking-tight text-slate-950', config.text)}>{normalizedScore}</span>
+          <span className={cn('font-bold tracking-tight text-slate-950', config.text)}>
+            {normalizedScore}
+          </span>
         </div>
       </div>
       <span className="text-sm font-medium text-slate-500">{label}</span>

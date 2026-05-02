@@ -58,8 +58,8 @@ export const Hero = ({
           Your Complete Developer Profile Analysis
         </h1>
         <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-500 sm:text-xl">
-          Get actionable insights from your GitHub activity, LinkedIn presence, and resume. Identify strengths,
-          discover gaps, and accelerate your career growth.
+          Get actionable insights from your GitHub activity, LinkedIn presence, and resume. Identify
+          strengths, discover gaps, and accelerate your career growth.
         </p>
 
         <div className="mx-auto mt-16 max-w-4xl rounded-2xl border border-slate-200 bg-white p-8 text-left shadow-2xl shadow-slate-200/70">
@@ -76,13 +76,18 @@ export const Hero = ({
                     'rounded-xl border-2 p-6 text-center transition',
                     selected
                       ? 'border-violet-600 bg-violet-50/70'
-                      : 'border-slate-200 bg-white hover:border-violet-200 hover:bg-slate-50',
+                      : 'border-slate-200 bg-white hover:border-violet-200 hover:bg-slate-50'
                   )}
                   key={source.id}
                   onClick={() => handleSourceSelect(source.id)}
                   type="button"
                 >
-                  <Icon className={cn('mx-auto h-8 w-8', selected ? 'text-violet-600' : 'text-slate-400')} />
+                  <Icon
+                    className={cn(
+                      'mx-auto h-8 w-8',
+                      selected ? 'text-violet-600' : 'text-slate-400'
+                    )}
+                  />
                   <div className="mt-4 font-semibold text-slate-950">{source.label}</div>
                   <div className="mt-2 text-sm font-medium text-slate-500">{source.helper}</div>
                 </button>
@@ -106,15 +111,30 @@ export const Hero = ({
                 type="button"
               >
                 <Upload className="h-8 w-8 text-violet-600" />
-                <span className="mt-4 font-semibold text-slate-950">{inputValue || 'Upload Resume (PDF)'}</span>
-                <span className="mt-2 text-sm text-slate-500">Click to upload or drag and drop</span>
+                <span className="mt-4 font-semibold text-slate-950">
+                  {inputValue || 'Upload Resume (PDF)'}
+                </span>
+                <span className="mt-2 text-sm text-slate-500">
+                  Click to upload or drag and drop
+                </span>
                 <span className="mt-1 text-sm text-slate-500">PDF up to 10MB</span>
-                <input ref={fileInputRef} className="hidden" type="file" accept=".pdf" onChange={handleFileChange} />
+                <input
+                  ref={fileInputRef}
+                  className="hidden"
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleFileChange}
+                />
               </button>
             ) : (
               <>
-                <label className="block text-base font-semibold text-slate-950" htmlFor="analysis-input">
-                  {activeSource.id === 'github' ? 'GitHub Username or Profile URL' : 'LinkedIn Profile URL'}
+                <label
+                  className="block text-base font-semibold text-slate-950"
+                  htmlFor="analysis-input"
+                >
+                  {activeSource.id === 'github'
+                    ? 'GitHub Username or Profile URL'
+                    : 'LinkedIn Profile URL'}
                 </label>
                 <input
                   id="analysis-input"
@@ -134,7 +154,9 @@ export const Hero = ({
           <button
             className={cn(
               'mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-400 to-fuchsia-400 font-bold text-white transition',
-              inputValue ? 'hover:from-violet-500 hover:to-fuchsia-500' : 'cursor-not-allowed opacity-70',
+              inputValue
+                ? 'hover:from-violet-500 hover:to-fuchsia-500'
+                : 'cursor-not-allowed opacity-70'
             )}
             disabled={!inputValue || isAnalyzing}
             onClick={onRunEngine}

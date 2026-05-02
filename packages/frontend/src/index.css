@@ -124,3 +124,47 @@
     linear-gradient(to bottom, #ffffff10 1px, transparent 1px);
   background-size: 40px 40px;
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #f8fafc !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .pdf-screen-only {
+    display: none !important;
+  }
+
+  .github-analysis-report {
+    min-height: auto !important;
+    background: #f8fafc !important;
+  }
+
+  .github-analysis-report main {
+    padding-top: 0 !important;
+  }
+
+  .github-analysis-report section,
+  .github-analysis-report article,
+  .github-analysis-report aside > section,
+  .github-analysis-report main > section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .github-analysis-report .shadow-sm {
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08) !important;
+  }
+
+  .github-analysis-report a,
+  .github-analysis-report button {
+    color: inherit;
+  }
+}

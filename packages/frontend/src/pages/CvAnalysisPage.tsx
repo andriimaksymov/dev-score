@@ -26,7 +26,7 @@ export default function CvAnalysisPage() {
   // Check for file on mount/render
   useEffect(() => {
     if (!file) {
-      // Don't set state errors here if we can handle in render, 
+      // Don't set state errors here if we can handle in render,
       // but to satisfy linter/logic, we'll mark as error state only if not redirecting.
       // Better pattern: redirect if no file.
       navigate('/');
@@ -42,14 +42,14 @@ export default function CvAnalysisPage() {
 
       try {
         const res = await client.post('/cv/upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
 
         setAnalysisState({
           loading: false,
           text: res.data.fullText,
           analysis: res.data.analysis,
-          error: null
+          error: null,
         });
       } catch (err: unknown) {
         console.error(err);
@@ -65,7 +65,7 @@ export default function CvAnalysisPage() {
           loading: false,
           text: '',
           analysis: null,
-          error: message
+          error: message,
         });
       }
     };
@@ -77,9 +77,7 @@ export default function CvAnalysisPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 text-center">
         <Loader2 size={48} className="animate-spin text-violet-600" />
-        <h6 className="font-bold text-slate-950">
-          Parsing PDF Vectors...
-        </h6>
+        <h6 className="font-bold text-slate-950">Parsing PDF Vectors...</h6>
         <p className="text-sm text-slate-500">Extracting Semantic Career Entities</p>
       </div>
     );
@@ -89,7 +87,10 @@ export default function CvAnalysisPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 p-8 text-center text-slate-950">
         <h5 className="mb-4 text-2xl font-bold">Parsing failed</h5>
-        <p className="mb-8 max-w-md text-red-600">{analysisState.error || 'The document format is incompatible with our current vector engine.'}</p>
+        <p className="mb-8 max-w-md text-red-600">
+          {analysisState.error ||
+            'The document format is incompatible with our current vector engine.'}
+        </p>
         <button
           onClick={() => navigate('/')}
           className="rounded-xl bg-slate-950 px-8 py-4 text-sm font-bold text-white transition-colors hover:bg-slate-800"
@@ -100,5 +101,11 @@ export default function CvAnalysisPage() {
     );
   }
 
-  return <CvAnalysisDashboard analysis={analysisState.analysis} text={analysisState.text} fileName={file?.name} />;
+  return (
+    <CvAnalysisDashboard
+      analysis={analysisState.analysis}
+      text={analysisState.text}
+      fileName={file?.name}
+    />
+  );
 }

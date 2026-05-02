@@ -10,10 +10,19 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/landing/Navbar';
-import { DashboardCard, CheckItem, KeywordTag, StatusPill, WarningItem } from '@/components/shared/DashboardPrimitives';
+import {
+  DashboardCard,
+  CheckItem,
+  KeywordTag,
+  StatusPill,
+  WarningItem,
+} from '@/components/shared/DashboardPrimitives';
 import { MetricCard } from '@/components/shared/MetricCard';
 import { ScoreRing } from '@/components/shared/ScoreRing';
-import type { LinkedInAnalysisResult, LinkedInProfile } from '@/features/analysis/types/analysis.types';
+import type {
+  LinkedInAnalysisResult,
+  LinkedInProfile,
+} from '@/features/analysis/types/analysis.types';
 
 interface LinkedInAnalysisDashboardProps {
   analysis: LinkedInAnalysisResult;
@@ -60,9 +69,9 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <Navbar />
-      <main className="pt-24">
+      <main className="pt-16">
         <section className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <button
               className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-950"
               onClick={() => navigate('/')}
@@ -75,15 +84,27 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-2xl font-bold text-white">
-                  {profile.avatarUrl ? <img className="h-full w-full object-cover" src={profile.avatarUrl} alt={profile.fullName} /> : profile.fullName.slice(0, 2).toUpperCase()}
+                  {profile.avatarUrl ? (
+                    <img
+                      className="h-full w-full object-cover"
+                      src={profile.avatarUrl}
+                      alt={profile.fullName}
+                    />
+                  ) : (
+                    profile.fullName.slice(0, 2).toUpperCase()
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-950">{profile.fullName}</h1>
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-950">
+                      {profile.fullName}
+                    </h1>
                     <Linkedin className="h-5 w-5 text-blue-600" />
                   </div>
                   <p className="mt-2 text-base font-medium text-slate-500">{currentHeadline}</p>
-                  <p className="mt-1 text-sm text-slate-500">Seniority Estimate: {analysis.summary.seniorityGuess}</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Seniority Estimate: {analysis.summary.seniorityGuess}
+                  </p>
                 </div>
               </div>
 
@@ -102,7 +123,12 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_384px] lg:px-8">
           <div className="space-y-8">
             <DashboardCard className="grid gap-8 md:grid-cols-[150px_1fr] md:items-center">
-              <ScoreRing score={dimensions.overall} label="Visibility Score" color="#f59e0b" size="lg" />
+              <ScoreRing
+                score={dimensions.overall}
+                label="Visibility Score"
+                color="#f59e0b"
+                size="lg"
+              />
               <div>
                 <h2 className="text-xl font-bold text-slate-950">LinkedIn Profile Analysis</h2>
                 <p className="mt-5 max-w-3xl text-base leading-7 text-slate-500">
@@ -120,10 +146,32 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
             <section>
               <h2 className="mb-5 text-xl font-bold text-slate-950">Key Metrics</h2>
               <div className="grid gap-4 md:grid-cols-2">
-                <MetricCard icon={<CheckCircle2 className="h-5 w-5" />} label="Profile Completeness" value={`${dimensions.profile.score}%`} trend="↑ 15%" trendDirection="up" />
-                <MetricCard icon={<TrendingUp className="h-5 w-5" />} label="Headline Quality" value={`${dimensions.headline.score}/100`} helper={dimensions.headline.status || 'Could be more compelling'} />
-                <MetricCard icon={<Award className="h-5 w-5" />} label="Experience Impact" value={`${dimensions.experience.score}/100`} trend="↑ 8%" trendDirection="up" />
-                <MetricCard icon={<Users className="h-5 w-5" />} label="Skills Relevance" value={`${dimensions.skills.score}/100`} helper={`${analysis.missingKeywords.length + 15} endorsed skills`} />
+                <MetricCard
+                  icon={<CheckCircle2 className="h-5 w-5" />}
+                  label="Profile Completeness"
+                  value={`${dimensions.profile.score}%`}
+                  trend="↑ 15%"
+                  trendDirection="up"
+                />
+                <MetricCard
+                  icon={<TrendingUp className="h-5 w-5" />}
+                  label="Headline Quality"
+                  value={`${dimensions.headline.score}/100`}
+                  helper={dimensions.headline.status || 'Could be more compelling'}
+                />
+                <MetricCard
+                  icon={<Award className="h-5 w-5" />}
+                  label="Experience Impact"
+                  value={`${dimensions.experience.score}/100`}
+                  trend="↑ 8%"
+                  trendDirection="up"
+                />
+                <MetricCard
+                  icon={<Users className="h-5 w-5" />}
+                  label="Skills Relevance"
+                  value={`${dimensions.skills.score}/100`}
+                  helper={`${analysis.missingKeywords.length + 15} endorsed skills`}
+                />
               </div>
             </section>
 
@@ -133,18 +181,30 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <WarningItem>Current Headline</WarningItem>
-                    <span className="text-sm text-slate-500">(Score: {dimensions.headline.score}/100)</span>
+                    <span className="text-sm text-slate-500">
+                      (Score: {dimensions.headline.score}/100)
+                    </span>
                   </div>
-                  <div className="mt-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-slate-950">"{currentHeadline}"</div>
-                  <p className="mt-2 text-sm text-slate-500">Issues: Generic, no value proposition, missing keywords</p>
+                  <div className="mt-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-slate-950">
+                    "{currentHeadline}"
+                  </div>
+                  <p className="mt-2 text-sm text-slate-500">
+                    Issues: Generic, no value proposition, missing keywords
+                  </p>
                 </div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <CheckItem>Recommended Headline</CheckItem>
-                    <span className="text-sm font-medium text-emerald-600">(Estimated Score: 92/100)</span>
+                    <span className="text-sm font-medium text-emerald-600">
+                      (Estimated Score: 92/100)
+                    </span>
                   </div>
-                  <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-slate-950">"{recommendedHeadline}"</div>
-                  <p className="mt-2 text-sm text-slate-500">Improvements: Specific impact, technical skills, value proposition</p>
+                  <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-slate-950">
+                    "{recommendedHeadline}"
+                  </div>
+                  <p className="mt-2 text-sm text-slate-500">
+                    Improvements: Specific impact, technical skills, value proposition
+                  </p>
                 </div>
               </div>
             </DashboardCard>
@@ -155,8 +215,15 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
                 <h3 className="font-semibold text-slate-950">Missing Elements:</h3>
                 <ul className="mt-3 space-y-2">
                   {(recommendations.aboutSuggestions.missing
-                    ? recommendations.aboutSuggestions.missing.split(/[,.;]\s+/).filter(Boolean).slice(0, 4)
-                    : ['No personal story or unique value proposition', 'Lacks specific achievements with metrics', 'Missing call-to-action for opportunities']
+                    ? recommendations.aboutSuggestions.missing
+                        .split(/[,.;]\s+/)
+                        .filter(Boolean)
+                        .slice(0, 4)
+                    : [
+                        'No personal story or unique value proposition',
+                        'Lacks specific achievements with metrics',
+                        'Missing call-to-action for opportunities',
+                      ]
                   ).map((item) => (
                     <WarningItem key={item}>{item}</WarningItem>
                   ))}
@@ -189,8 +256,13 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
                       },
                     ]
                 ).map((edit) => (
-                  <article className="rounded-xl border border-slate-200 p-5" key={`${edit.role}-${edit.company}`}>
-                    <h3 className="font-bold text-slate-950">{edit.role} • {edit.company}</h3>
+                  <article
+                    className="rounded-xl border border-slate-200 p-5"
+                    key={`${edit.role}-${edit.company}`}
+                  >
+                    <h3 className="font-bold text-slate-950">
+                      {edit.role} • {edit.company}
+                    </h3>
                     <div className="mt-5 grid gap-5">
                       <div>
                         <p className="font-semibold text-orange-600">Current bullet points:</p>
@@ -216,11 +288,22 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
 
             <DashboardCard>
               <h2 className="text-xl font-bold text-slate-950">Missing Visibility Keywords</h2>
-              <p className="mt-6 text-sm text-slate-500">Adding these keywords will improve searchability by recruiters:</p>
+              <p className="mt-6 text-sm text-slate-500">
+                Adding these keywords will improve searchability by recruiters:
+              </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {(analysis.missingKeywords.length
                   ? analysis.missingKeywords
-                  : ['Cloud Architecture', 'System Design', 'Microservices', 'Kubernetes', 'CI/CD', 'Performance Optimization', 'Team Leadership', 'Agile']
+                  : [
+                      'Cloud Architecture',
+                      'System Design',
+                      'Microservices',
+                      'Kubernetes',
+                      'CI/CD',
+                      'Performance Optimization',
+                      'Team Leadership',
+                      'Agile',
+                    ]
                 ).map((keyword) => (
                   <KeywordTag key={keyword}>{keyword}</KeywordTag>
                 ))}
@@ -273,7 +356,9 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
                 </div>
                 <div>
                   <p className="font-semibold text-slate-950">Recommended Positioning:</p>
-                  <p className="mt-2 text-slate-500">Full-stack engineer specializing in scalable systems and developer experience</p>
+                  <p className="mt-2 text-slate-500">
+                    Full-stack engineer specializing in scalable systems and developer experience
+                  </p>
                 </div>
               </div>
             </DashboardCard>
@@ -292,7 +377,10 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
                       <span className="font-bold text-slate-950">{value}</span>
                     </div>
                     <div className="h-2 rounded-full bg-slate-100">
-                      <div className="h-2 rounded-full" style={{ width: value, backgroundColor: color }} />
+                      <div
+                        className="h-2 rounded-full"
+                        style={{ width: value, backgroundColor: color }}
+                      />
                     </div>
                   </div>
                 ))}

@@ -1,15 +1,12 @@
-import {
-  ArrowLeft,
-  Download,
-  Eye,
-  FileText,
-  Target,
-  TrendingUp,
-  Zap,
-} from 'lucide-react';
+import { ArrowLeft, Download, Eye, FileText, Target, TrendingUp, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/landing/Navbar';
-import { DashboardCard, CheckItem, KeywordTag, StatusPill } from '@/components/shared/DashboardPrimitives';
+import {
+  DashboardCard,
+  CheckItem,
+  KeywordTag,
+  StatusPill,
+} from '@/components/shared/DashboardPrimitives';
 import { MetricCard } from '@/components/shared/MetricCard';
 import { ScoreRing } from '@/components/shared/ScoreRing';
 import type { CvAnalysisResult } from '@/features/analysis/types/analysis.types';
@@ -25,19 +22,22 @@ const fallbackImprovements = [
     category: 'Impact',
     quote: 'Responsible for developing new features for the web application',
     suggestion: 'Passive voice, no quantified impact',
-    rewritten: 'Developed 12+ customer-facing features that increased user engagement by 35% and reduced churn by 18%',
+    rewritten:
+      'Developed 12+ customer-facing features that increased user engagement by 35% and reduced churn by 18%',
   },
   {
     category: 'Impact',
     quote: 'Worked on improving application performance',
     suggestion: 'Vague, no specific metrics or outcomes',
-    rewritten: 'Optimized database queries and API endpoints, reducing average page load time from 3.2s to 0.8s, improving Core Web Vitals scores by 40%',
+    rewritten:
+      'Optimized database queries and API endpoints, reducing average page load time from 3.2s to 0.8s, improving Core Web Vitals scores by 40%',
   },
   {
     category: 'Clarity',
     quote: 'Collaborated with team members on various projects',
     suggestion: 'Too generic, unclear contribution',
-    rewritten: 'Led cross-functional team of 6 engineers and designers to deliver e-commerce checkout redesign, increasing conversion rate by 22%',
+    rewritten:
+      'Led cross-functional team of 6 engineers and designers to deliver e-commerce checkout redesign, increasing conversion rate by 22%',
   },
   {
     category: 'Formatting',
@@ -49,7 +49,8 @@ const fallbackImprovements = [
     category: 'Skills',
     quote: 'Skills listed without context or proficiency levels',
     suggestion: 'Impossible to gauge actual expertise',
-    rewritten: 'Organize by category (Languages, Frameworks, Tools) and optionally add proficiency: "Expert: JavaScript, React | Proficient: Python, Django"',
+    rewritten:
+      'Organize by category (Languages, Frameworks, Tools) and optionally add proficiency: "Expert: JavaScript, React | Proficient: Python, Django"',
   },
 ];
 
@@ -88,15 +89,19 @@ const CvAnalysisDashboard = ({ analysis, text, fileName }: CvAnalysisDashboardPr
   const score = analysis.summary.professionalLikelihood || 0;
   const improvements = analysis.improvements.length ? analysis.improvements : fallbackImprovements;
   const categories = Array.from(new Set(improvements.map((item) => item.category)));
-  const scannedDate = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(new Date());
+  const scannedDate = new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date());
   const atsScore = Math.max(42, Math.min(92, 92 - analysis.missingKeywords.length * 3));
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <Navbar />
-      <main className="pt-24">
+      <main className="pt-16">
         <section className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <button
               className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-950"
               onClick={() => navigate('/')}
@@ -112,12 +117,17 @@ const CvAnalysisDashboard = ({ analysis, text, fileName }: CvAnalysisDashboardPr
                   <FileText className="h-8 w-8" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold tracking-tight text-slate-950">{fileName || 'Resume Scanner'}</h1>
+                  <h1 className="text-2xl font-bold tracking-tight text-slate-950">
+                    {fileName || 'Resume Scanner'}
+                  </h1>
                   <p className="mt-2 text-base text-slate-500">Scanned on {scannedDate}</p>
                 </div>
               </div>
 
-              <button className="inline-flex w-fit items-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-slate-800" type="button">
+              <button
+                className="inline-flex w-fit items-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-slate-800"
+                type="button"
+              >
                 <Download className="h-4 w-4" />
                 Download Report
               </button>
@@ -144,9 +154,21 @@ const CvAnalysisDashboard = ({ analysis, text, fileName }: CvAnalysisDashboardPr
             </DashboardCard>
 
             <div className="grid gap-4 md:grid-cols-3">
-              <MetricCard icon={<Target className="h-5 w-5 text-red-600" />} label="Critical Issues Found" value={`${Math.max(improvements.length, analysis.missingKeywords.length)}`} />
-              <MetricCard icon={<Target className="h-5 w-5 text-orange-600" />} label="ATS Compatibility" value={`${atsScore}%`} />
-              <MetricCard icon={<Eye className="h-5 w-5 text-emerald-600" />} label="Visual Layout" value="Good" />
+              <MetricCard
+                icon={<Target className="h-5 w-5 text-red-600" />}
+                label="Critical Issues Found"
+                value={`${Math.max(improvements.length, analysis.missingKeywords.length)}`}
+              />
+              <MetricCard
+                icon={<Target className="h-5 w-5 text-orange-600" />}
+                label="ATS Compatibility"
+                value={`${atsScore}%`}
+              />
+              <MetricCard
+                icon={<Eye className="h-5 w-5 text-emerald-600" />}
+                label="Visual Layout"
+                value="Good"
+              />
             </div>
 
             {categories.map((category) => {
@@ -163,9 +185,14 @@ const CvAnalysisDashboard = ({ analysis, text, fileName }: CvAnalysisDashboardPr
                   </h2>
                   <div className="mt-6 space-y-6 border-l-4 border-orange-300 pl-5">
                     {categoryItems.map((item, index) => (
-                      <article className="space-y-3" key={`${item.category}-${item.quote}-${index}`}>
+                      <article
+                        className="space-y-3"
+                        key={`${item.category}-${item.quote}-${index}`}
+                      >
                         <p className="text-xs font-bold uppercase text-slate-500">Current</p>
-                        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-slate-950">{item.quote}</div>
+                        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-slate-950">
+                          {item.quote}
+                        </div>
                         <p className="text-xs font-bold uppercase text-orange-600">Issue</p>
                         <p className="text-sm text-slate-500">{item.suggestion}</p>
                         <p className="text-xs font-bold uppercase text-slate-500">Improved</p>
@@ -182,17 +209,34 @@ const CvAnalysisDashboard = ({ analysis, text, fileName }: CvAnalysisDashboardPr
             <DashboardCard>
               <h2 className="text-xl font-bold text-slate-950">Missing ATS Keywords</h2>
               <p className="mt-6 text-sm text-slate-500">
-                These keywords commonly appear in software engineering job descriptions but are missing from your resume:
+                These keywords commonly appear in software engineering job descriptions but are
+                missing from your resume:
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {(analysis.missingKeywords.length
                   ? analysis.missingKeywords
-                  : ['Microservices', 'RESTful APIs', 'GraphQL', 'CI/CD', 'Docker', 'Kubernetes', 'Test-Driven Development', 'Agile', 'System Design', 'Code Review', 'Performance Optimization', 'Cloud Architecture']
+                  : [
+                      'Microservices',
+                      'RESTful APIs',
+                      'GraphQL',
+                      'CI/CD',
+                      'Docker',
+                      'Kubernetes',
+                      'Test-Driven Development',
+                      'Agile',
+                      'System Design',
+                      'Code Review',
+                      'Performance Optimization',
+                      'Cloud Architecture',
+                    ]
                 ).map((keyword) => (
                   <KeywordTag key={keyword}>{keyword}</KeywordTag>
                 ))}
               </div>
-              <p className="mt-6 text-sm text-slate-500">Tip: Integrate these naturally into your experience bullets where truthful and relevant</p>
+              <p className="mt-6 text-sm text-slate-500">
+                Tip: Integrate these naturally into your experience bullets where truthful and
+                relevant
+              </p>
             </DashboardCard>
 
             <DashboardCard>
@@ -228,7 +272,10 @@ const CvAnalysisDashboard = ({ analysis, text, fileName }: CvAnalysisDashboardPr
                       <span className="font-bold text-slate-950">{value as number}%</span>
                     </div>
                     <div className="h-2 rounded-full bg-slate-100">
-                      <div className="h-2 rounded-full" style={{ width: `${value}%`, backgroundColor: color as string }} />
+                      <div
+                        className="h-2 rounded-full"
+                        style={{ width: `${value}%`, backgroundColor: color as string }}
+                      />
                     </div>
                   </div>
                 ))}
@@ -267,8 +314,8 @@ const CvAnalysisDashboard = ({ analysis, text, fileName }: CvAnalysisDashboardPr
               <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4">
                 <h3 className="font-bold text-slate-950">Add Quantified Metrics</h3>
                 <p className="mt-3 text-sm leading-6 text-slate-500">
-                  This single change will have the biggest impact on your resume's effectiveness. Review every bullet
-                  point and ask: "What measurable result did I achieve?"
+                  This single change will have the biggest impact on your resume's effectiveness.
+                  Review every bullet point and ask: "What measurable result did I achieve?"
                 </p>
               </div>
             </DashboardCard>

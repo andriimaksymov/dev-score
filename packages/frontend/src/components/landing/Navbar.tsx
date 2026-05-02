@@ -29,19 +29,34 @@ export const Navbar = () => {
         </button>
 
         <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 md:flex">
-          <button className="text-sm font-medium text-slate-950" onClick={() => navigate('/')} type="button">
+          <button
+            className="text-sm font-medium text-slate-950"
+            onClick={() => navigate('/')}
+            type="button"
+          >
             Home
           </button>
-          <button className="text-sm font-medium text-slate-500 hover:text-slate-950" onClick={() => scrollToSection('how-it-works')} type="button">
+          <button
+            className="text-sm font-medium text-slate-500 hover:text-slate-950"
+            onClick={() => scrollToSection('how-it-works')}
+            type="button"
+          >
             How it Works
           </button>
-          <button className="text-sm font-medium text-slate-500 hover:text-slate-950" onClick={() => scrollToSection('privacy')} type="button">
+          <button
+            className="text-sm font-medium text-slate-500 hover:text-slate-950"
+            onClick={() => scrollToSection('privacy')}
+            type="button"
+          >
             Privacy
           </button>
         </div>
 
         <div className="ml-auto hidden items-center gap-6 sm:flex">
-          <button className="text-sm font-semibold text-slate-500 hover:text-slate-950" type="button">
+          <button
+            className="text-sm font-semibold text-slate-500 hover:text-slate-950"
+            type="button"
+          >
             Sign In
           </button>
           <button

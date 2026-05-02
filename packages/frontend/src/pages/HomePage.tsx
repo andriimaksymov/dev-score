@@ -6,7 +6,6 @@ import { DashboardPreview } from '@/components/landing/DashboardPreview';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { TheDifference } from '@/components/landing/TheDifference';
 
-
 const HomePage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('github');
@@ -33,7 +32,10 @@ const HomePage = () => {
         clearInterval(interval);
 
         if (activeTab === 'github') {
-          const username = inputValue.replace(/^(https?:\/\/)?(www\.)?github\.com\//, '').split('/')[0].trim();
+          const username = inputValue
+            .replace(/^(https?:\/\/)?(www\.)?github\.com\//, '')
+            .split('/')[0]
+            .trim();
           if (username) navigate(`/analysis/${username}`);
         } else if (activeTab === 'linkedin') {
           navigate(`/linkedin?url=${encodeURIComponent(inputValue)}`);

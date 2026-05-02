@@ -21,14 +21,16 @@ export function MetricCard({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-5 flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">{icon}</div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+          {icon}
+        </div>
         {trend && (
           <span
             className={cn(
               'text-sm font-semibold',
               trendDirection === 'up' && 'text-emerald-600',
               trendDirection === 'down' && 'text-red-600',
-              trendDirection === 'neutral' && 'text-slate-500',
+              trendDirection === 'neutral' && 'text-slate-500'
             )}
           >
             {trend}

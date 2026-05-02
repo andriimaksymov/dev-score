@@ -6,11 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    svgr(),
-    tailwindcss()
-  ],
+  plugins: [react(), svgr(), tailwindcss()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -26,4 +22,3 @@ export default defineConfig({
     },
   },
 });
-

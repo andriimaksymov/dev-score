@@ -7,7 +7,13 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 export default function AnalysisResultsPage() {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
-  const { mutate: analyzePortfolio, data: analysis, isPending, isError, error } = useAnalyzePortfolio();
+  const {
+    mutate: analyzePortfolio,
+    data: analysis,
+    isPending,
+    isError,
+    error,
+  } = useAnalyzePortfolio();
 
   useEffect(() => {
     if (!username) {
@@ -22,9 +28,7 @@ export default function AnalysisResultsPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 text-center">
         <Loader2 size={48} className="animate-spin text-violet-600" />
-        <h6 className="font-bold text-slate-950">
-          Finalizing AI Report...
-        </h6>
+        <h6 className="font-bold text-slate-950">Finalizing AI Report...</h6>
         <p className="text-sm text-slate-500">Analyzing {username}'s engineering profile</p>
       </div>
     );
@@ -33,11 +37,11 @@ export default function AnalysisResultsPage() {
   if (isError) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 p-8 text-center">
-        <h4 className="text-3xl font-bold text-red-600">
-          Analysis Failed
-        </h4>
+        <h4 className="text-3xl font-bold text-red-600">Analysis Failed</h4>
         <p className="max-w-md text-slate-500">
-          {error instanceof Error ? error.message : 'An unexpected error occurred while analyzing this profile.'}
+          {error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred while analyzing this profile.'}
         </p>
         <button
           onClick={() => navigate('/')}

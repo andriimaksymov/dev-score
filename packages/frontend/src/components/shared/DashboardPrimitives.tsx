@@ -9,7 +9,13 @@ export function DashboardCard({
   children: ReactNode;
   className?: string;
 }) {
-  return <section className={cn('rounded-2xl border border-slate-200 bg-white p-6 shadow-sm', className)}>{children}</section>;
+  return (
+    <section
+      className={cn('rounded-2xl border border-slate-200 bg-white p-6 shadow-sm', className)}
+    >
+      {children}
+    </section>
+  );
 }
 
 export function StatusPill({
@@ -28,7 +34,11 @@ export function StatusPill({
     slate: 'bg-slate-100 text-slate-600',
   };
 
-  return <span className={cn('rounded-full px-3 py-1 text-sm font-medium', tones[tone])}>{children}</span>;
+  return (
+    <span className={cn('rounded-full px-3 py-1 text-sm font-medium', tones[tone])}>
+      {children}
+    </span>
+  );
 }
 
 export function CheckItem({ children }: { children: ReactNode }) {

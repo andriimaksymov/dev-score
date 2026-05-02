@@ -52,10 +52,12 @@ This makes the GitHub activity timeline easier to understand and improves the qu
 
 ```md
 ## Summary
+
 - What changed?
 - Why did it change?
 
 ## Verification
+
 - [ ] pnpm lint:check
 - [ ] pnpm type-check
 - [ ] pnpm test
@@ -63,6 +65,7 @@ This makes the GitHub activity timeline easier to understand and improves the qu
 - [ ] pnpm test:e2e, if UI flow changed
 
 ## Screenshots
+
 - Before:
 - After:
 ```

@@ -9,7 +9,9 @@ async function listModels() {
   try {
     const models = await genAI.models.list();
     console.log('Available Models:');
-    models.forEach(m => console.log(`- ${m.name} (${m.supportedMethods.join(', ')})`));
+    models.forEach((m) =>
+      console.log(`- ${m.name} (${m.supportedMethods.join(', ')})`),
+    );
   } catch (e) {
     console.error('Error listing models:', e);
   }
