@@ -8,8 +8,6 @@ describe('Hero Component', () => {
     setActiveTab: vi.fn(),
     inputValue: '',
     setInputValue: vi.fn(),
-    isAnalyzing: false,
-    loadingStep: 0,
     onRunEngine: vi.fn(),
     onFileUpload: vi.fn(),
   };

@@ -24,7 +24,13 @@ export default function AnalysisResultsPage() {
     analyzePortfolio({ username });
   }, [username, analyzePortfolio, navigate]);
 
-  if (isPending) {
+  const handleRescan = () => {
+    if (username) {
+      analyzePortfolio({ username });
+    }
+  };
+
+  if (isPending && !analysis) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 text-center">
         <Loader2 size={48} className="animate-spin text-violet-600" />
@@ -55,5 +61,7 @@ export default function AnalysisResultsPage() {
 
   if (!analysis) return null;
 
-  return <GitHubAnalysisDashboard analysis={analysis} />;
+  return (
+    <GitHubAnalysisDashboard analysis={analysis} isRescanning={isPending} onRescan={handleRescan} />
+  );
 }

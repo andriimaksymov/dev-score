@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { ArrowRight, Github, Linkedin, Loader2, Upload } from 'lucide-react';
+import { ArrowRight, Github, Linkedin, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface HeroProps {
@@ -7,8 +7,6 @@ interface HeroProps {
   setActiveTab: (tab: string) => void;
   inputValue: string;
   setInputValue: (val: string) => void;
-  isAnalyzing: boolean;
-  loadingStep: number;
   onRunEngine: () => void;
   onFileUpload?: (file: File) => void;
 }
@@ -24,7 +22,6 @@ export const Hero = ({
   setActiveTab,
   inputValue,
   setInputValue,
-  isAnalyzing,
   onRunEngine,
   onFileUpload,
 }: HeroProps) => {
@@ -96,13 +93,7 @@ export const Hero = ({
           </div>
 
           <div className="mt-8">
-            {isAnalyzing ? (
-              <div className="flex min-h-32 flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
-                <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
-                <p className="mt-4 font-semibold text-slate-950">Analyzing your profile...</p>
-                <p className="mt-1 text-sm text-slate-500">This may take a few moments</p>
-              </div>
-            ) : activeTab === 'cv' ? (
+            {activeTab === 'cv' ? (
               <button
                 className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-9 text-center transition hover:border-violet-300 hover:bg-violet-50/40"
                 onDragOver={(event) => event.preventDefault()}
@@ -158,7 +149,7 @@ export const Hero = ({
                 ? 'hover:from-violet-500 hover:to-fuchsia-500'
                 : 'cursor-not-allowed opacity-70'
             )}
-            disabled={!inputValue || isAnalyzing}
+            disabled={!inputValue}
             onClick={onRunEngine}
             type="button"
           >

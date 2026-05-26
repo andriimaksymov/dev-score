@@ -139,6 +139,9 @@ export interface CvAnalysisResult {
 export interface LinkedInProfile {
   fullName: string;
   avatarUrl?: string;
+  title?: string;
+  headline?: string;
+  about?: string;
 }
 
 export interface LinkedInAnalysisResult {

@@ -61,10 +61,13 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
   const dimensions = analysis.dimensions;
   const recommendations = analysis.recommendations;
   const actionPlan = analysis.actionPlan || fallbackActionPlan;
-  const currentHeadline = 'Software Engineer at TechCorp';
+  const currentHeadline = profile.title || profile.headline || 'No headline provided';
   const recommendedHeadline =
     recommendations.headlines?.[0] ||
     'Full-Stack Engineer | Built scalable systems serving 10M+ users | React • Node.js • AWS | Passionate about developer experience';
+
+  const pillTone = (score: number): 'green' | 'orange' | 'red' =>
+    score >= 70 ? 'green' : score >= 40 ? 'orange' : 'red';
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
@@ -136,9 +139,17 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
                     'Your profile has good foundational elements but lacks compelling storytelling and strategic keyword optimization. Improving your headline, about section, and adding more quantified achievements will significantly boost visibility to recruiters.'}
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <StatusPill>Strong Experience</StatusPill>
-                  <StatusPill tone="orange">Weak Headline</StatusPill>
-                  <StatusPill tone="orange">Limited Engagement</StatusPill>
+                  {(
+                    [
+                      ['Experience', dimensions.experience.score, dimensions.experience.status],
+                      ['Headline', dimensions.headline.score, dimensions.headline.status],
+                      ['Skills', dimensions.skills.score, dimensions.skills.status],
+                    ] as [string, number, string][]
+                  ).map(([label, score, status]) => (
+                    <StatusPill key={label} tone={pillTone(score)}>
+                      {status || label}
+                    </StatusPill>
+                  ))}
                 </div>
               </div>
             </DashboardCard>
@@ -241,48 +252,30 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
             <DashboardCard>
               <h2 className="text-xl font-bold text-slate-950">Experience Section Improvements</h2>
               <div className="mt-6 space-y-5">
-                {(recommendations.experienceEdits.length
-                  ? recommendations.experienceEdits
-                  : [
-                      {
-                        role: 'Senior Software Engineer',
-                        company: 'TechCorp',
-                        improvements: [
-                          'Led development of real-time analytics dashboard serving 50K+ daily users, reducing data latency by 75%',
-                          'Architected microservices migration strategy for 8 legacy applications, improving deployment frequency from monthly to daily releases',
-                          'Mentored team of 4 junior developers, implementing code review standards that reduced production bugs by 40%',
-                          'Optimized database queries and API endpoints, decreasing average response time from 800ms to 120ms',
-                        ],
-                      },
-                    ]
-                ).map((edit) => (
-                  <article
-                    className="rounded-xl border border-slate-200 p-5"
-                    key={`${edit.role}-${edit.company}`}
-                  >
-                    <h3 className="font-bold text-slate-950">
-                      {edit.role} • {edit.company}
-                    </h3>
-                    <div className="mt-5 grid gap-5">
-                      <div>
-                        <p className="font-semibold text-orange-600">Current bullet points:</p>
-                        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-500">
-                          <li>Developed new features for the platform</li>
-                          <li>Worked with cross-functional teams</li>
-                          <li>Improved application performance</li>
-                        </ul>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-emerald-600">Optimized bullet points:</p>
+                {recommendations.experienceEdits.length ? (
+                  recommendations.experienceEdits.map((edit) => (
+                    <article
+                      className="rounded-xl border border-slate-200 p-5"
+                      key={`${edit.role}-${edit.company}`}
+                    >
+                      <h3 className="font-bold text-slate-950">
+                        {edit.role} • {edit.company}
+                      </h3>
+                      <div className="mt-5">
+                        <p className="font-semibold text-emerald-600">Suggested improvements:</p>
                         <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-950">
                           {edit.improvements.map((item) => (
                             <li key={item}>{item}</li>
                           ))}
                         </ul>
                       </div>
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500">
+                    Add your experience via the enrich form for detailed optimization suggestions.
+                  </p>
+                )}
               </div>
             </DashboardCard>
 
@@ -352,12 +345,16 @@ const LinkedInAnalysisDashboard = ({ analysis, profile }: LinkedInAnalysisDashbo
               <div className="mt-5 space-y-4 text-sm">
                 <div>
                   <p className="font-semibold text-slate-950">Current Positioning:</p>
-                  <p className="mt-2 text-slate-500">Generic software engineer</p>
+                  <p className="mt-2 text-slate-500">
+                    {profile.title || profile.headline || 'Not assessed — add your headline for positioning analysis.'}
+                  </p>
                 </div>
                 <div>
                   <p className="font-semibold text-slate-950">Recommended Positioning:</p>
                   <p className="mt-2 text-slate-500">
-                    Full-stack engineer specializing in scalable systems and developer experience
+                    {recommendations.headlines[1] ||
+                      recommendations.headlines[0] ||
+                      'See Headline Optimization above for positioning guidance.'}
                   </p>
                 </div>
               </div>
