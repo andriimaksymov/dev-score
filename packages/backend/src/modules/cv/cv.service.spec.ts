@@ -1,4 +1,5 @@
 import { extractText, getDocumentProxy } from 'unpdf';
+import pdfParse from 'pdf-parse';
 import { CvService } from './cv.service';
 import { AiService } from '../ai/ai.service';
 
@@ -6,9 +7,11 @@ jest.mock('unpdf', () => ({
   getDocumentProxy: jest.fn(),
   extractText: jest.fn(),
 }));
+jest.mock('pdf-parse', () => jest.fn());
 
 const mockedGetDoc = getDocumentProxy as jest.Mock;
 const mockedExtract = extractText as jest.Mock;
+const mockedPdfParse = pdfParse as unknown as jest.Mock;
 
 describe('CvService', () => {
   let service: CvService;
@@ -37,11 +40,26 @@ describe('CvService', () => {
     });
   });
 
-  it('propagates a controlled error when PDF parsing fails', async () => {
-    mockedExtract.mockRejectedValue(new Error('corrupt pdf'));
+  it('returns a friendly 422 when both parsers fail', async () => {
+    mockedExtract.mockRejectedValue(new Error('Invalid PDF structure.'));
+    mockedPdfParse.mockRejectedValue(new Error('also bad'));
     await expect(service.processCv(Buffer.from('bad'))).rejects.toThrow(
-      'corrupt pdf',
+      'could not read that PDF',
     );
     expect(generateCvAnalysis).not.toHaveBeenCalled();
+  });
+
+  it('falls back to pdf-parse when unpdf cannot parse the PDF', async () => {
+    mockedExtract.mockRejectedValue(new Error('Invalid PDF structure.'));
+    mockedPdfParse.mockResolvedValue({ text: 'recovered resume text' });
+
+    const result = await service.processCv(Buffer.from('%PDF-1.4'));
+
+    expect(mockedPdfParse).toHaveBeenCalled();
+    expect(generateCvAnalysis).toHaveBeenCalledWith(
+      'recovered resume text',
+      {},
+    );
+    expect(result.fullText).toBe('recovered resume text');
   });
 });

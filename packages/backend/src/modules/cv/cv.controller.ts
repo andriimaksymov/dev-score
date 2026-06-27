@@ -9,14 +9,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
 import { CvService } from './cv.service';
-
-/** Max accepted upload size — comfortably above any real resume PDF. */
-const MAX_CV_BYTES = 8 * 1024 * 1024;
-
-/** A real PDF starts with the "%PDF-" magic header; trust bytes, not headers. */
-function isPdf(buffer: Buffer): boolean {
-  return buffer.subarray(0, 5).toString('latin1') === '%PDF-';
-}
+import { MAX_PDF_BYTES, isPdf } from '../../common/pdf.util';
 
 @Controller('cv')
 export class CvController {
@@ -26,7 +19,7 @@ export class CvController {
   @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @Post('upload')
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: MAX_CV_BYTES, files: 1 } }),
+    FileInterceptor('file', { limits: { fileSize: MAX_PDF_BYTES, files: 1 } }),
   )
   async uploadCv(
     @UploadedFile() file?: Express.Multer.File,

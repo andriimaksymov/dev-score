@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AiService } from '../ai/ai.service';
 import { LinkedinService } from './linkedin.service';
-import { LinkedinScraper } from './linkedin.scraper';
+import * as pdfUtil from '../../common/pdf.util';
 
 describe('LinkedinService', () => {
   let service: LinkedinService;
@@ -10,14 +10,14 @@ describe('LinkedinService', () => {
   beforeEach(async () => {
     aiService = {
       generateLinkedinAnalysis: jest.fn().mockResolvedValue({
-        summary: { text: 'Limited analysis', seniorityGuess: 'Unknown' },
+        summary: { text: 'Analysis', seniorityGuess: 'Senior' },
         dimensions: {
-          overall: 20,
-          profile: { score: 20, status: 'Limited Evidence', insights: [] },
-          headline: { score: 0, status: 'Limited Evidence', insights: [] },
-          experience: { score: 0, status: 'Limited Evidence', insights: [] },
-          skills: { score: 0, status: 'Limited Evidence', insights: [] },
-          branding: { score: 0, status: 'Limited Evidence', insights: [] },
+          overall: 70,
+          profile: { score: 70, status: 'Strong', insights: [] },
+          headline: { score: 70, status: 'Strong', insights: [] },
+          experience: { score: 70, status: 'Strong', insights: [] },
+          skills: { score: 70, status: 'Strong', insights: [] },
+          branding: { score: 70, status: 'Strong', insights: [] },
         },
         recommendations: {
           headlines: [],
@@ -26,20 +26,13 @@ describe('LinkedinService', () => {
         },
         missingKeywords: [],
         actionPlan: { thisWeek: [], next30Days: [], next60Days: [] },
-        sourceLimitations: ['limited'],
+        sourceLimitations: [],
         nextActions: [],
       }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        LinkedinService,
-        LinkedinScraper,
-        {
-          provide: AiService,
-          useValue: aiService,
-        },
-      ],
+      providers: [LinkedinService, { provide: AiService, useValue: aiService }],
     }).compile();
 
     service = module.get<LinkedinService>(LinkedinService);
@@ -49,22 +42,23 @@ describe('LinkedinService', () => {
     expect(service).toBeDefined();
   });
 
-  it('marks URL-only analysis as limited evidence', async () => {
-    const result = await service.analyzeProfileFromUrl(
-      'https://www.linkedin.com/in/sample-person',
-    );
+  it('extracts PDF text, guesses the name, and runs AI analysis', async () => {
+    jest
+      .spyOn(pdfUtil, 'extractPdfText')
+      .mockResolvedValue(
+        'Jane Developer\nSenior Frontend Engineer\n' +
+          'Experienced engineer who builds accessible, well-tested React and Node.js applications for product teams.',
+      );
 
-    expect(result.profile.fullName).toBe('Sample Person');
-    expect(result.profile.experience).toEqual([]);
+    const result = await service.analyzeProfileFromPdf(Buffer.from('%PDF-1.4'));
+
+    expect(result.profile.fullName).toBe('Jane Developer');
+    // The returned profile is the same object passed to the analyzer.
+    expect(result.profile.profileText).toContain('Senior Frontend Engineer');
+    expect(aiService.generateLinkedinAnalysis).toHaveBeenCalledTimes(1);
     expect(aiService.generateLinkedinAnalysis).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: '',
-        about: '',
-        skills: [],
-      }),
-      expect.objectContaining({
-        limitedEvidence: true,
-      }),
+      result.profile,
     );
+    expect(result.analysis.dimensions.overall).toBe(70);
   });
 });

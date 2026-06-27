@@ -1,7 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { AiService, CvAnalysisOptions } from '../ai/ai.service';
-
-import { extractText, getDocumentProxy } from 'unpdf';
+import { extractPdfText } from '../../common/pdf.util';
 
 @Injectable()
 export class CvService {
@@ -12,26 +15,29 @@ export class CvService {
   async processCv(buffer: Buffer, options: CvAnalysisOptions = {}) {
     this.logger.log('Processing CV PDF...');
 
+    let text: string;
     try {
-      // unpdf is a maintained, actively-patched pdf.js wrapper (replacing the
-      // unmaintained pdf-parse@1.1.1).
-      const pdf = await getDocumentProxy(new Uint8Array(buffer));
-      const { text } = await extractText(pdf, { mergePages: true });
-
-      this.logger.log(`Extracted ${text.length} characters from PDF.`);
-
-      // Send to AI for analysis
-      const analysis = await this.aiService.generateCvAnalysis(text, options);
-
-      return {
-        fullText: text,
-        analysis,
-      };
-    } catch (error: any) {
-      this.logger.error('Error during CV processing', error);
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to process CV.';
-      throw new Error(errorMessage);
+      text = await extractPdfText(buffer);
+    } catch (error) {
+      // Unreadable/malformed PDF — return a friendly 422, not a 500.
+      this.logger.error(
+        `CV PDF parse failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      throw new UnprocessableEntityException(
+        'We could not read that PDF. Please re-export it and try again.',
+      );
     }
+
+    this.logger.log(`Extracted ${text.length} characters from PDF.`);
+
+    // The AI layer has deterministic fallbacks and does not throw.
+    const analysis = await this.aiService.generateCvAnalysis(text, options);
+
+    return {
+      fullText: text,
+      analysis,
+    };
   }
 }

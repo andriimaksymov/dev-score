@@ -13,7 +13,7 @@ interface HeroProps {
 
 const sources = [
   { id: 'github', label: 'GitHub Profile', helper: 'Analyze code contributions', icon: Github },
-  { id: 'linkedin', label: 'LinkedIn Profile', helper: 'Optimize visibility', icon: Linkedin },
+  { id: 'linkedin', label: 'LinkedIn Profile', helper: 'Upload PDF, get a score', icon: Linkedin },
   { id: 'cv', label: 'Resume / CV', helper: 'Upload PDF for review', icon: Upload },
 ];
 
@@ -26,7 +26,6 @@ export const Hero = ({
   onFileUpload,
 }: HeroProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const activeSource = sources.find((source) => source.id === activeTab) ?? sources[0];
 
   const handleSourceSelect = (source: string) => {
     setActiveTab(source);
@@ -93,51 +92,61 @@ export const Hero = ({
           </div>
 
           <div className="mt-8">
-            {activeTab === 'cv' ? (
-              <button
-                className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-9 text-center transition hover:border-violet-300 hover:bg-violet-50/40"
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={handleFileDrop}
-                onClick={() => fileInputRef.current?.click()}
-                type="button"
-              >
-                <Upload className="h-8 w-8 text-violet-600" />
-                <span className="mt-4 font-semibold text-slate-950">
-                  {inputValue || 'Upload Resume (PDF)'}
-                </span>
-                <span className="mt-2 text-sm text-slate-500">
-                  Click to upload or drag and drop
-                </span>
-                <span className="mt-1 text-sm text-slate-500">PDF up to 10MB</span>
-                <input
-                  ref={fileInputRef}
-                  className="hidden"
-                  type="file"
-                  accept=".pdf"
-                  onChange={handleFileChange}
-                />
-              </button>
-            ) : (
+            {activeTab === 'github' ? (
               <>
                 <label
                   className="block text-base font-semibold text-slate-950"
                   htmlFor="analysis-input"
                 >
-                  {activeSource.id === 'github'
-                    ? 'GitHub Username or Profile URL'
-                    : 'LinkedIn Profile URL'}
+                  GitHub Username or Profile URL
                 </label>
                 <input
                   id="analysis-input"
                   className="mt-3 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
-                  placeholder={
-                    activeSource.id === 'github'
-                      ? 'e.g., octocat or https://github.com/octocat'
-                      : 'e.g., https://linkedin.com/in/your-profile'
-                  }
+                  placeholder="e.g., octocat or https://github.com/octocat"
                   value={inputValue}
                   onChange={(event) => setInputValue(event.target.value)}
                 />
+              </>
+            ) : (
+              <>
+                <button
+                  className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-9 text-center transition hover:border-violet-300 hover:bg-violet-50/40"
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={handleFileDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  type="button"
+                >
+                  <Upload className="h-8 w-8 text-violet-600" />
+                  <span className="mt-4 font-semibold text-slate-950">
+                    {inputValue ||
+                      (activeTab === 'linkedin' ? 'Upload LinkedIn PDF' : 'Upload Resume (PDF)')}
+                  </span>
+                  <span className="mt-2 text-sm text-slate-500">
+                    Click to upload or drag and drop
+                  </span>
+                  <span className="mt-1 text-sm text-slate-500">PDF up to 10MB</span>
+                  <input
+                    ref={fileInputRef}
+                    className="hidden"
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileChange}
+                  />
+                </button>
+
+                {activeTab === 'linkedin' && (
+                  <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-5 py-4">
+                    <p className="text-sm font-semibold text-slate-950">
+                      How to export your LinkedIn PDF
+                    </p>
+                    <ol className="mt-2 space-y-1 text-sm text-slate-600">
+                      <li>1. Go to your LinkedIn profile page</li>
+                      <li>2. Click &quot;More&quot; below your headline</li>
+                      <li>3. Select &quot;Save to PDF&quot;</li>
+                    </ol>
+                  </div>
+                )}
               </>
             )}
           </div>

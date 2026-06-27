@@ -13,17 +13,14 @@ const HomePage = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleRunEngine = () => {
-    if (!inputValue && activeTab !== 'cv') return;
-    if (activeTab === 'cv' && !selectedFile) return;
-
     if (activeTab === 'github') {
       const username = inputValue
         .replace(/^(https?:\/\/)?(www\.)?github\.com\//, '')
         .split('/')[0]
         .trim();
       if (username) navigate(`/analysis/${username}`);
-    } else if (activeTab === 'linkedin') {
-      navigate(`/linkedin?url=${encodeURIComponent(inputValue)}`);
+    } else if (activeTab === 'linkedin' && selectedFile) {
+      navigate('/linkedin', { state: { file: selectedFile } });
     } else if (activeTab === 'cv' && selectedFile) {
       navigate('/cv', { state: { file: selectedFile } });
     }

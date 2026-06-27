@@ -12,9 +12,7 @@ describe('LinkedinController', () => {
         {
           provide: LinkedinService,
           useValue: {
-            analyzeProfileFromUrl: jest.fn(),
-            analyzeProfile: jest.fn(),
-            fetchProfile: jest.fn(),
+            analyzeProfileFromPdf: jest.fn(),
           },
         },
       ],
