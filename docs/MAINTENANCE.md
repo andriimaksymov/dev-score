@@ -1,6 +1,6 @@
 # Maintenance Guide
 
-This guide supports the consistency recommendation from the repository audit. It defines a small, repeatable workflow for keeping the project healthy.
+This guide defines a small, repeatable workflow for keeping the project healthy. The same gates run automatically in CI (`.github/workflows/ci.yml`); the checklist below is for local verification before pushing.
 
 ## Weekly Maintenance Checklist
 
