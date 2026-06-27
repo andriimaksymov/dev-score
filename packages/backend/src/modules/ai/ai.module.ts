@@ -6,6 +6,6 @@ import { AiProviderClient } from './providers/ai-provider.client';
 @Module({
   imports: [ConfigModule],
   providers: [AiService, AiProviderClient],
-  exports: [AiService],
+  exports: [AiService, AiProviderClient],
 })
 export class AiModule {}

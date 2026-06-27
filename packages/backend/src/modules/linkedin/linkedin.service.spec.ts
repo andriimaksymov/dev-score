@@ -1,64 +1,67 @@
+import { UnprocessableEntityException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { AiService } from '../ai/ai.service';
 import { LinkedinService } from './linkedin.service';
+import { LinkedinAnalyzer } from './linkedin-analyzer.service';
 import * as pdfUtil from '../../common/pdf.util';
 
 describe('LinkedinService', () => {
   let service: LinkedinService;
-  let aiService: { generateLinkedinAnalysis: jest.Mock };
+  let analyzer: { assess: jest.Mock };
 
   beforeEach(async () => {
-    aiService = {
-      generateLinkedinAnalysis: jest.fn().mockResolvedValue({
-        summary: { text: 'Analysis', seniorityGuess: 'Senior' },
-        dimensions: {
-          overall: 70,
-          profile: { score: 70, status: 'Strong', insights: [] },
-          headline: { score: 70, status: 'Strong', insights: [] },
-          experience: { score: 70, status: 'Strong', insights: [] },
-          skills: { score: 70, status: 'Strong', insights: [] },
-          branding: { score: 70, status: 'Strong', insights: [] },
-        },
-        recommendations: {
-          headlines: [],
-          aboutSuggestions: { missing: '', rewritten: '' },
-          experienceEdits: [],
-        },
-        missingKeywords: [],
-        actionPlan: { thisWeek: [], next30Days: [], next60Days: [] },
-        sourceLimitations: [],
-        nextActions: [],
+    analyzer = {
+      assess: jest.fn().mockResolvedValue({
+        name: 'Jane Developer',
+        targetTitle: 'Senior Frontend Engineer',
+        overallScore: 72,
+        summary: 'Solid profile.',
+        sections: [],
+        generatedAt: '2026-06-27T00:00:00.000Z',
       }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [LinkedinService, { provide: AiService, useValue: aiService }],
+      providers: [
+        LinkedinService,
+        { provide: LinkedinAnalyzer, useValue: analyzer },
+      ],
     }).compile();
 
     service = module.get<LinkedinService>(LinkedinService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
-  it('extracts PDF text, guesses the name, and runs AI analysis', async () => {
+  it('extracts PDF text and delegates to the analyzer', async () => {
     jest
-      .spyOn(pdfUtil, 'extractPdfText')
+      .spyOn(pdfUtil, 'extractPdfTextWithLayout')
       .mockResolvedValue(
         'Jane Developer\nSenior Frontend Engineer\n' +
-          'Experienced engineer who builds accessible, well-tested React and Node.js applications for product teams.',
+          'Experienced engineer who builds accessible, well-tested React apps for product teams.',
       );
 
     const result = await service.analyzeProfileFromPdf(Buffer.from('%PDF-1.4'));
 
-    expect(result.profile.fullName).toBe('Jane Developer');
-    // The returned profile is the same object passed to the analyzer.
-    expect(result.profile.profileText).toContain('Senior Frontend Engineer');
-    expect(aiService.generateLinkedinAnalysis).toHaveBeenCalledTimes(1);
-    expect(aiService.generateLinkedinAnalysis).toHaveBeenCalledWith(
-      result.profile,
-    );
-    expect(result.analysis.dimensions.overall).toBe(70);
+    expect(analyzer.assess).toHaveBeenCalledTimes(1);
+    expect(result.targetTitle).toBe('Senior Frontend Engineer');
+    expect(result.overallScore).toBe(72);
+  });
+
+  it('returns a friendly 422 when the PDF cannot be read', async () => {
+    jest
+      .spyOn(pdfUtil, 'extractPdfTextWithLayout')
+      .mockRejectedValue(new Error('Invalid PDF structure.'));
+
+    await expect(
+      service.analyzeProfileFromPdf(Buffer.from('bad')),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+    expect(analyzer.assess).not.toHaveBeenCalled();
+  });
+
+  it('rejects PDFs with too little readable text', async () => {
+    jest.spyOn(pdfUtil, 'extractPdfTextWithLayout').mockResolvedValue('short');
+
+    await expect(
+      service.analyzeProfileFromPdf(Buffer.from('%PDF-1.4')),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+    expect(analyzer.assess).not.toHaveBeenCalled();
   });
 });

@@ -3,9 +3,9 @@ import {
   Logger,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { AiService } from '../ai/ai.service';
-import type { LinkedinAnalysisRequest } from '../ai/ai.service';
-import { extractPdfText } from '../../common/pdf.util';
+import type { LinkedinProfileAssessment } from '@portfolio/shared';
+import { LinkedinAnalyzer } from './linkedin-analyzer.service';
+import { extractPdfTextWithLayout } from '../../common/pdf.util';
 
 /** Below this, the PDF is almost certainly image-only or not a real profile. */
 const MIN_PROFILE_TEXT = 100;
@@ -14,24 +14,18 @@ const MIN_PROFILE_TEXT = 100;
 export class LinkedinService {
   private readonly logger = new Logger(LinkedinService.name);
 
-  constructor(private readonly aiService: AiService) {}
+  constructor(private readonly analyzer: LinkedinAnalyzer) {}
 
   /**
    * Analyze a LinkedIn profile from its exported PDF: extract the text, then
-   * run the AI LinkedIn analysis over it.
+   * run the section-by-section assessment.
    */
-  async analyzeProfileFromPdf(buffer: Buffer) {
+  async analyzeProfileFromPdf(
+    buffer: Buffer,
+  ): Promise<LinkedinProfileAssessment> {
     const text = await this.extractProfileText(buffer);
     this.logger.log(`Extracted ${text.length} characters from LinkedIn PDF.`);
-
-    const profile = this.buildProfileFromText(text);
-    const analysis = await this.aiService.generateLinkedinAnalysis(profile);
-
-    return {
-      profile,
-      analysis,
-      timestamp: new Date().toISOString(),
-    };
+    return this.analyzer.assess(text);
   }
 
   /**
@@ -41,7 +35,7 @@ export class LinkedinService {
   private async extractProfileText(buffer: Buffer): Promise<string> {
     let text: string;
     try {
-      text = await extractPdfText(buffer);
+      text = await extractPdfTextWithLayout(buffer);
     } catch (err) {
       this.logger.error(
         `LinkedIn PDF parse failed: ${
@@ -60,42 +54,5 @@ export class LinkedinService {
     }
 
     return text;
-  }
-
-  /**
-   * Build the AI request from raw PDF text. The full text goes into
-   * `profileText` (which the analyzer treats as primary evidence); the display
-   * name is a best-effort guess from the first plausible line.
-   */
-  private buildProfileFromText(text: string): LinkedinAnalysisRequest {
-    return {
-      fullName: this.guessName(text),
-      title: '',
-      headline: '',
-      about: text.slice(0, 4000),
-      profileText: text,
-      targetRoles: [],
-      experience: [],
-      skills: [],
-    };
-  }
-
-  private guessName(text: string): string {
-    const firstLine = text
-      .split('\n')
-      .map((line) => line.trim())
-      .find((line) => line.length > 0);
-
-    // LinkedIn's "Save to PDF" leads with the member's name. Accept a short,
-    // digit-free first line as the name; otherwise fall back to a generic label.
-    if (
-      firstLine &&
-      firstLine.length <= 60 &&
-      !/\d/.test(firstLine) &&
-      firstLine.split(/\s+/).length <= 5
-    ) {
-      return firstLine;
-    }
-    return 'Your LinkedIn Profile';
   }
 }

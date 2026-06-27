@@ -37,3 +37,24 @@ export async function extractPdfText(buffer: Buffer): Promise<string> {
   const data = await pdfParse(buffer);
   return data.text;
 }
+
+/**
+ * Extract text while preserving line breaks, which the LinkedIn section parser
+ * needs to recognise section headers. pdf-parse keeps the document's line
+ * layout (unpdf flattens everything to one line), so it's the primary here;
+ * unpdf is the fallback for PDFs pdf-parse rejects.
+ */
+export async function extractPdfTextWithLayout(
+  buffer: Buffer,
+): Promise<string> {
+  try {
+    const data = await pdfParse(buffer);
+    if (data.text && data.text.trim().length > 0) {
+      return data.text;
+    }
+  } catch {
+    // Fall through to the flattened extractor.
+  }
+
+  return extractPdfText(buffer);
+}

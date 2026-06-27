@@ -65,3 +65,39 @@ export interface AnalysisScores {
   techStackDiversity: number;
   consistency: number;
 }
+
+// ── LinkedIn section-by-section assessment ──────────────────────────────────
+
+export type LinkedinSectionStatus = 'strong' | 'ok' | 'weak' | 'missing';
+
+/** The AI-produced analysis for a single profile section. */
+export interface LinkedinSectionAnalysis {
+  /** 0–100 quality score for this section relative to the target title. */
+  score: number;
+  status: LinkedinSectionStatus;
+  /** What the section looks like today. */
+  currentState: string;
+  /** How to improve it, anchored on the target title. */
+  recommendation: string;
+  /** Concrete, copy-pasteable next steps. */
+  actions: string[];
+}
+
+/** A section result: the AI analysis plus orchestrator-added metadata. */
+export interface LinkedinSectionResult extends LinkedinSectionAnalysis {
+  key: string;
+  label: string;
+  /** Whether the section was detected in the uploaded profile. */
+  present: boolean;
+}
+
+/** Full assessment returned for one LinkedIn PDF upload. */
+export interface LinkedinProfileAssessment {
+  name: string;
+  /** Title/headline used as the anchor for every recommendation. */
+  targetTitle: string;
+  overallScore: number;
+  summary: string;
+  sections: LinkedinSectionResult[];
+  generatedAt: string;
+}
