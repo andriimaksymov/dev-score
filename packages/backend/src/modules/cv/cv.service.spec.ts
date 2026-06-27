@@ -1,10 +1,14 @@
-import pdf from 'pdf-parse';
+import { extractText, getDocumentProxy } from 'unpdf';
 import { CvService } from './cv.service';
 import { AiService } from '../ai/ai.service';
 
-jest.mock('pdf-parse', () => jest.fn());
+jest.mock('unpdf', () => ({
+  getDocumentProxy: jest.fn(),
+  extractText: jest.fn(),
+}));
 
-const mockedPdf = pdf as unknown as jest.Mock;
+const mockedGetDoc = getDocumentProxy as jest.Mock;
+const mockedExtract = extractText as jest.Mock;
 
 describe('CvService', () => {
   let service: CvService;
@@ -12,19 +16,20 @@ describe('CvService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedGetDoc.mockResolvedValue({});
     generateCvAnalysis = jest.fn().mockResolvedValue({ score: 80 });
     const aiService = { generateCvAnalysis } as unknown as AiService;
     service = new CvService(aiService);
   });
 
   it('extracts text and forwards it (with options) to the AI service', async () => {
-    mockedPdf.mockResolvedValue({ text: 'resume text' });
+    mockedExtract.mockResolvedValue({ text: 'resume text' });
     const buffer = Buffer.from('%PDF-1.4');
     const options = { targetRole: 'Frontend', seniority: 'Senior' };
 
     const result = await service.processCv(buffer, options);
 
-    expect(mockedPdf).toHaveBeenCalledWith(buffer);
+    expect(mockedGetDoc).toHaveBeenCalled();
     expect(generateCvAnalysis).toHaveBeenCalledWith('resume text', options);
     expect(result).toEqual({
       fullText: 'resume text',
@@ -33,7 +38,7 @@ describe('CvService', () => {
   });
 
   it('propagates a controlled error when PDF parsing fails', async () => {
-    mockedPdf.mockRejectedValue(new Error('corrupt pdf'));
+    mockedExtract.mockRejectedValue(new Error('corrupt pdf'));
     await expect(service.processCv(Buffer.from('bad'))).rejects.toThrow(
       'corrupt pdf',
     );

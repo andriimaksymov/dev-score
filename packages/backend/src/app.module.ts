@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import configuration from './config/configuration';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -18,6 +20,9 @@ import { CvModule } from './modules/cv/cv.module';
       envFilePath: ['../../.env', '../.env', '.env'],
       load: [configuration],
     }),
+    // Per-IP rate limiting. Default ceiling for all routes; expensive AI
+    // endpoints apply a tighter @Throttle on top of this.
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
     AnalysisModule,
     GithubModule,
     ScoringModule,
@@ -26,6 +31,10 @@ import { CvModule } from './modules/cv/cv.module';
     CvModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // Apply the throttler globally.
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}

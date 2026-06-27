@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiService, CvAnalysisOptions } from '../ai/ai.service';
 
-import pdf from 'pdf-parse';
+import { extractText, getDocumentProxy } from 'unpdf';
 
 @Injectable()
 export class CvService {
@@ -13,8 +13,10 @@ export class CvService {
     this.logger.log('Processing CV PDF...');
 
     try {
-      const data: pdf.Result = await pdf(buffer);
-      const text = data.text;
+      // unpdf is a maintained, actively-patched pdf.js wrapper (replacing the
+      // unmaintained pdf-parse@1.1.1).
+      const pdf = await getDocumentProxy(new Uint8Array(buffer));
+      const { text } = await extractText(pdf, { mergePages: true });
 
       this.logger.log(`Extracted ${text.length} characters from PDF.`);
 

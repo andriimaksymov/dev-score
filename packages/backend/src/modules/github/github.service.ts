@@ -31,10 +31,14 @@ export class GithubService {
         ? { Authorization: `token ${this.apiToken}` }
         : {};
 
+      // Encode so a crafted value can't inject path/query segments into the
+      // (token-authenticated) GitHub API request.
+      const user = encodeURIComponent(username);
+
       // Fetch user profile
       const userResponse = await firstValueFrom(
         this.httpService.get<GithubProfile>(
-          `${this.apiBaseUrl}/users/${username}`,
+          `${this.apiBaseUrl}/users/${user}`,
           {
             headers,
           },
@@ -44,7 +48,7 @@ export class GithubService {
       // Fetch user repositories
       const reposResponse = await firstValueFrom(
         this.httpService.get<GithubRepo[]>(
-          `${this.apiBaseUrl}/users/${username}/repos?per_page=100&sort=updated`,
+          `${this.apiBaseUrl}/users/${user}/repos?per_page=100&sort=updated`,
           { headers },
         ),
       );
@@ -52,7 +56,7 @@ export class GithubService {
       // Fetch user events (for activity analysis)
       const eventsResponse = await firstValueFrom(
         this.httpService.get<GithubEvent[]>(
-          `${this.apiBaseUrl}/users/${username}/events/public?per_page=100`,
+          `${this.apiBaseUrl}/users/${user}/events/public?per_page=100`,
           { headers },
         ),
       );
@@ -80,9 +84,13 @@ export class GithubService {
         ? { Authorization: `token ${this.apiToken}` }
         : {};
 
+      const encodedPath = path
+        .split('/')
+        .map((segment) => encodeURIComponent(segment))
+        .join('/');
       const response = await firstValueFrom(
         this.httpService.get(
-          `${this.apiBaseUrl}/repos/${username}/${repo}/contents/${path}`,
+          `${this.apiBaseUrl}/repos/${encodeURIComponent(username)}/${encodeURIComponent(repo)}/contents/${encodedPath}`,
           { headers },
         ),
       );
@@ -107,7 +115,7 @@ export class GithubService {
 
       const response = await firstValueFrom(
         this.httpService.get<Record<string, number>>(
-          `${this.apiBaseUrl}/repos/${username}/${repo}/languages`,
+          `${this.apiBaseUrl}/repos/${encodeURIComponent(username)}/${encodeURIComponent(repo)}/languages`,
           { headers },
         ),
       );
