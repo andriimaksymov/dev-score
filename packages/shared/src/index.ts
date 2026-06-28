@@ -10,7 +10,7 @@
 
 export type AnalysisSource = 'github' | 'linkedin' | 'cv';
 
-export type ProviderName = 'openai' | 'gemini' | 'groq' | 'deterministic';
+export type ProviderName = 'openrouter' | 'openai' | 'gemini' | 'groq' | 'deterministic';
 
 export type QualitySignalStatus = 'strong' | 'ok' | 'weak' | 'unknown';
 

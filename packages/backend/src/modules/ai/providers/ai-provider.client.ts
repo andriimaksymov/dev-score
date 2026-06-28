@@ -32,6 +32,14 @@ export interface ProviderResult<T> {
 }
 
 const DEFAULT_PROVIDER_ORDER: RuntimeProviderName[] = [
+  'openrouter',
+  'openai',
+  'gemini',
+  'groq',
+];
+
+const RUNTIME_PROVIDER_NAMES: RuntimeProviderName[] = [
+  'openrouter',
   'openai',
   'gemini',
   'groq',
@@ -46,15 +54,20 @@ const DEFAULT_PROVIDER_ORDER: RuntimeProviderName[] = [
 @Injectable()
 export class AiProviderClient {
   private readonly logger = new Logger(AiProviderClient.name);
+  private openrouter: OpenAI | null = null;
   private openai: OpenAI | null = null;
   private gemini: GoogleGenAI | null = null;
   private groq: Groq | null = null;
+  private readonly openrouterModel: string;
   private readonly openaiModel: string;
   private readonly geminiModel: string;
   private readonly groqModel: string;
   private readonly providerOrder: RuntimeProviderName[];
 
   constructor(private readonly configService: ConfigService) {
+    this.openrouterModel =
+      this.configService.get<string>('ai.openrouterModel') ??
+      'openai/gpt-4o-mini';
     this.openaiModel =
       this.configService.get<string>('ai.openaiModel') ?? 'gpt-5-mini';
     this.geminiModel =
@@ -144,6 +157,29 @@ Validation issues to fix: ${validationMessage}`,
   }
 
   private initializeClients() {
+    const openrouterKey =
+      this.configService.get<string>('openrouter.apiKey') ||
+      this.configService.get<string>('OPENROUTER_API_KEY') ||
+      this.configService.get<string>('OPEN_ROUTER');
+    if (openrouterKey) {
+      const baseURL =
+        this.configService.get<string>('openrouter.baseUrl') ??
+        'https://openrouter.ai/api/v1';
+      this.openrouter = new OpenAI({
+        apiKey: openrouterKey,
+        baseURL,
+        defaultHeaders: {
+          'HTTP-Referer':
+            this.configService.get<string>('frontendUrl') ??
+            'http://localhost:5173',
+          'X-Title': 'Portfolio Analyzer',
+        },
+      });
+      this.logger.log(
+        `OpenRouter provider enabled with model ${this.openrouterModel}`,
+      );
+    }
+
     const geminiKey = this.configService.get<string>('GEMINI_API_KEY');
     if (geminiKey) {
       this.gemini = new GoogleGenAI({ apiKey: geminiKey });
@@ -164,7 +200,7 @@ Validation issues to fix: ${validationMessage}`,
       this.logger.log(`Groq provider enabled with model ${this.groqModel}`);
     }
 
-    if (!this.openai && !this.gemini && !this.groq) {
+    if (!this.openrouter && !this.openai && !this.gemini && !this.groq) {
       this.logger.warn(
         'No AI provider keys found. Deterministic analysis fallbacks will be used.',
       );
@@ -182,7 +218,7 @@ Validation issues to fix: ${validationMessage}`,
       .split(',')
       .map((name) => name.trim().toLowerCase())
       .filter((name): name is RuntimeProviderName =>
-        ['openai', 'gemini', 'groq'].includes(name),
+        (RUNTIME_PROVIDER_NAMES as string[]).includes(name),
       );
 
     return names.length ? names : DEFAULT_PROVIDER_ORDER;
@@ -191,6 +227,9 @@ Validation issues to fix: ${validationMessage}`,
   private getAvailableProviders(): RuntimeProvider[] {
     return this.providerOrder
       .map((name) => {
+        if (name === 'openrouter' && this.openrouter) {
+          return { name, model: this.openrouterModel };
+        }
         if (name === 'openai' && this.openai) {
           return { name, model: this.openaiModel };
         }
@@ -209,6 +248,12 @@ Validation issues to fix: ${validationMessage}`,
     provider: RuntimeProvider,
     task: StructuredTask<T>,
   ): Promise<unknown> {
+    if (provider.name === 'openrouter') {
+      if (!this.openrouter)
+        throw new Error('OpenRouter client is not initialized');
+      return this.callOpenRouter(this.openrouter, provider.model, task);
+    }
+
     if (provider.name === 'openai') {
       if (!this.openai) throw new Error('OpenAI client is not initialized');
       return this.callOpenAi(this.openai, provider.model, task);
@@ -221,6 +266,58 @@ Validation issues to fix: ${validationMessage}`,
 
     if (!this.groq) throw new Error('Groq client is not initialized');
     return this.callGroq(this.groq, provider.model, task);
+  }
+
+  /**
+   * OpenRouter exposes an OpenAI-compatible API. We request a strict JSON
+   * schema for models that support structured outputs, then fall back to plain
+   * JSON-object mode so the call still works on models that don't.
+   */
+  private async callOpenRouter<T>(
+    client: OpenAI,
+    model: string,
+    task: StructuredTask<T>,
+  ): Promise<unknown> {
+    try {
+      const completion = await client.chat.completions.create({
+        model,
+        messages: [
+          { role: 'system', content: task.systemPrompt },
+          { role: 'user', content: task.userPrompt },
+        ],
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: task.schemaName,
+            strict: true,
+            schema: this.toJsonSchema(task.schemaName, task.schema),
+          },
+        },
+      });
+      const content = completion.choices[0]?.message?.content;
+      if (!content) throw new Error('OpenRouter returned an empty response.');
+      return this.parseJson(content);
+    } catch (error) {
+      this.logger.warn(
+        `OpenRouter schema mode failed for ${task.schemaName}; retrying JSON object mode.`,
+      );
+      const completion = await client.chat.completions.create({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: `${task.systemPrompt}\nReturn valid JSON only.`,
+          },
+          { role: 'user', content: task.userPrompt },
+        ],
+        response_format: { type: 'json_object' },
+      });
+      const content = completion.choices[0]?.message?.content;
+      if (!content) {
+        throw error instanceof Error ? error : new Error('OpenRouter failed.');
+      }
+      return this.parseJson(content);
+    }
   }
 
   private async callOpenAi<T>(

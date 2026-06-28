@@ -4,7 +4,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { AiService, CvAnalysisOptions } from '../ai/ai.service';
-import { extractPdfText } from '../../common/pdf.util';
+import { extractPdfTextWithLayout } from '../../common/pdf.util';
 
 @Injectable()
 export class CvService {
@@ -17,7 +17,9 @@ export class CvService {
 
     let text: string;
     try {
-      text = await extractPdfText(buffer);
+      // Preserve the document's line layout so the regenerated résumé PDF can
+      // reconstruct headings, bullets and sections instead of one flat blob.
+      text = await extractPdfTextWithLayout(buffer);
     } catch (error) {
       // Unreadable/malformed PDF — return a friendly 422, not a 500.
       this.logger.error(

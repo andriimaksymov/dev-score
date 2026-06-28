@@ -106,6 +106,7 @@ export default function CvAnalysisPage() {
       analysis={analysisState.analysis}
       text={analysisState.text}
       fileName={file?.name}
+      file={file}
     />
   );
 }

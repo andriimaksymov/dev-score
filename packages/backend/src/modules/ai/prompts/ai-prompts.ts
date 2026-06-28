@@ -115,6 +115,10 @@ export const buildCvPrompt = (input: CvPromptInput) => ({
   systemPrompt: `
 You review software engineering resumes.
 ${evidenceRules}
+Set summary.professionalLikelihood to an INTEGER from 0 to 100 that rates the
+overall strength of the resume for the target role (0 = very weak, 100 =
+exceptional). It is a 0-100 score, NOT a 0-1 probability — a typical solid
+resume scores 60-80.
 For each improvement, quote an exact contiguous phrase from the resume text.
 Do not create an improvement if you cannot quote the exact source text.
 Missing keywords must be truthful to the target role or job description and should not imply experience the resume does not show.

@@ -3,6 +3,7 @@ import type * as Shared from '@portfolio/shared';
 
 export const analysisSourceSchema = z.enum(['github', 'linkedin', 'cv']);
 export const providerNameSchema = z.enum([
+  'openrouter',
   'openai',
   'gemini',
   'groq',

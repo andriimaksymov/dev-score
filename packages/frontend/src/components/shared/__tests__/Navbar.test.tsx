@@ -23,12 +23,13 @@ describe('Navbar Component', () => {
     expect(screen.getByText(/Privacy/i)).toBeInTheDocument();
   });
 
-  it('renders the primary action', () => {
+  it('does not render auth actions', () => {
     render(
       <MemoryRouter>
         <Navbar />
       </MemoryRouter>
     );
-    expect(screen.getByRole('button', { name: /Get Started/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Get Started/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Sign In/i })).not.toBeInTheDocument();
   });
 });

@@ -243,6 +243,14 @@ export class AiService {
       cvEvidence,
     );
 
+    // Backstop: some models read "professionalLikelihood" as a 0-1 probability
+    // and return a fraction (e.g. 1 or 0.7). The score is a 0-100 rating, so
+    // scale any value in that range up. The prompt asks for 0-100 directly.
+    const likelihood = response.summary.professionalLikelihood;
+    if (likelihood > 0 && likelihood <= 1) {
+      response.summary.professionalLikelihood = Math.round(likelihood * 100);
+    }
+
     return {
       ...response,
       analysisMetadata: this.createMetadata(

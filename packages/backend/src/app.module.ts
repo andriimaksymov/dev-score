@@ -17,7 +17,16 @@ import { CvModule } from './modules/cv/cv.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['../../.env', '../.env', '.env'],
+      // `.env.local` files take precedence (first match wins) so local secrets
+      // like OPENROUTER override the committed `.env`.
+      envFilePath: [
+        '../../.env.local',
+        '../.env.local',
+        '.env.local',
+        '../../.env',
+        '../.env',
+        '.env',
+      ],
       load: [configuration],
     }),
     // Per-IP rate limiting. Default ceiling for all routes; expensive AI

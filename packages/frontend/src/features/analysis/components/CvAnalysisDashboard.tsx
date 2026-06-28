@@ -1,4 +1,5 @@
-import { ArrowLeft, Download, Eye, FileText, Target, TrendingUp, Zap } from 'lucide-react';
+import { lazy, Suspense } from 'react';
+import { ArrowLeft, Eye, FileText, Loader2, Sparkles, Target, TrendingUp, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardShell } from '@/components/shared/DashboardShell';
 import {
@@ -11,10 +12,14 @@ import { MetricCard } from '@/components/shared/MetricCard';
 import { ScoreRing } from '@/components/shared/ScoreRing';
 import type { CvAnalysisResult } from '@/features/analysis/types/analysis.types';
 
+// Lazily loaded so pdf.js (~0.5 MB) only ships when a resume is being reviewed.
+const CvPdfReviewer = lazy(() => import('@/features/analysis/components/CvPdfReviewer'));
+
 interface CvAnalysisDashboardProps {
   analysis: CvAnalysisResult;
   text: string;
   fileName?: string;
+  file?: File;
 }
 
 const fallbackImprovements = [
@@ -77,18 +82,10 @@ Senior Software Engineer | Example Company | Jan 2020 - Present
 SKILLS
 JavaScript, React, Node.js, Python, SQL, Git`;
 
-const categoryIcon = {
-  Impact: TrendingUp,
-  Clarity: Eye,
-  Formatting: FileText,
-  Skills: Zap,
-};
-
-const CvAnalysisDashboard = ({ analysis, text, fileName }: CvAnalysisDashboardProps) => {
+const CvAnalysisDashboard = ({ analysis, text, fileName, file }: CvAnalysisDashboardProps) => {
   const navigate = useNavigate();
   const score = analysis.summary.professionalLikelihood || 0;
   const improvements = analysis.improvements.length ? analysis.improvements : fallbackImprovements;
-  const categories = Array.from(new Set(improvements.map((item) => item.category)));
   const scannedDate = new Intl.DateTimeFormat('en-US', {
     month: 'long',
     day: 'numeric',
@@ -99,150 +96,119 @@ const CvAnalysisDashboard = ({ analysis, text, fileName }: CvAnalysisDashboardPr
   return (
     <DashboardShell>
       <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <button
-            className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-950"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-950"
             onClick={() => navigate('/')}
             type="button"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Home
+            Back
           </button>
-
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-emerald-600 text-white">
-                <FileText className="h-8 w-8" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight text-slate-950">
-                  {fileName || 'Resume Scanner'}
-                </h1>
-                <p className="mt-2 text-base text-slate-500">Scanned on {scannedDate}</p>
-              </div>
-            </div>
-
-            <button
-              className="inline-flex w-fit items-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-slate-800"
-              type="button"
-            >
-              <Download className="h-4 w-4" />
-              Download Report
-            </button>
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 text-white">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold tracking-tight text-slate-950">
+              {fileName || 'Resume Scanner'}
+            </h1>
+            <p className="text-xs text-slate-500">Scanned on {scannedDate}</p>
           </div>
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_384px] lg:px-8">
-        <div className="space-y-8">
-          <DashboardCard className="grid gap-8 md:grid-cols-[150px_1fr] md:items-center">
-            <ScoreRing score={score} label="Professional Score" color="#f59e0b" size="lg" />
-            <div>
-              <h2 className="text-xl font-bold text-slate-950">Executive Summary</h2>
-              <p className="mt-5 max-w-3xl text-base leading-7 text-slate-500">
-                {analysis.summary.critique ||
-                  'Your resume demonstrates relevant technical experience but lacks impact-driven storytelling. Key improvements include quantifying achievements with specific metrics, using active voice consistently, and optimizing for ATS keyword matching.'}
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <StatusPill>Relevant Experience</StatusPill>
-                <StatusPill tone="orange">Weak Metrics</StatusPill>
-                <StatusPill tone="orange">Generic Language</StatusPill>
-              </div>
-            </div>
-          </DashboardCard>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <MetricCard
-              icon={<Target className="h-5 w-5 text-red-600" />}
-              label="Critical Issues Found"
-              value={`${Math.max(improvements.length, analysis.missingKeywords.length)}`}
-            />
-            <MetricCard
-              icon={<Target className="h-5 w-5 text-orange-600" />}
-              label="ATS Compatibility"
-              value={`${atsScore}%`}
-            />
-            <MetricCard
-              icon={<Eye className="h-5 w-5 text-emerald-600" />}
-              label="Visual Layout"
-              value="Good"
-            />
+      <div className="mx-auto max-w-[1600px] space-y-8 px-4 py-6 sm:px-6 lg:px-8">
+        <div>
+          <div className="mb-4">
+            <h2 className="flex items-center gap-2 text-xl font-bold text-slate-950">
+              <Sparkles className="h-5 w-5 text-amber-500" />
+              Review &amp; Fix
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Original on the left with rewritten passages highlighted, fully updated version on the
+              right — click any highlight to see what changed.
+            </p>
           </div>
-
-          {categories.map((category) => {
-            const Icon = categoryIcon[category as keyof typeof categoryIcon] || FileText;
-            const categoryItems = improvements.filter((item) => item.category === category);
-
-            return (
-              <DashboardCard key={category}>
-                <h2 className="flex items-center gap-3 text-xl font-bold text-slate-950">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  {category} Improvements
-                </h2>
-                <div className="mt-6 space-y-6 border-l-4 border-orange-300 pl-5">
-                  {categoryItems.map((item, index) => (
-                    <article className="space-y-3" key={`${item.category}-${item.quote}-${index}`}>
-                      <p className="text-xs font-bold uppercase text-slate-500">Current</p>
-                      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-slate-950">
-                        {item.quote}
-                      </div>
-                      <p className="text-xs font-bold uppercase text-orange-600">Issue</p>
-                      <p className="text-sm text-slate-500">{item.suggestion}</p>
-                      <p className="text-xs font-bold uppercase text-slate-500">Improved</p>
-                      <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium leading-6 text-slate-950">
-                        {item.rewritten}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </DashboardCard>
-            );
-          })}
-
-          <DashboardCard>
-            <h2 className="text-xl font-bold text-slate-950">Missing ATS Keywords</h2>
-            <p className="mt-6 text-sm text-slate-500">
-              These keywords commonly appear in software engineering job descriptions but are
-              missing from your resume:
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {(analysis.missingKeywords.length
-                ? analysis.missingKeywords
-                : [
-                    'Microservices',
-                    'RESTful APIs',
-                    'GraphQL',
-                    'CI/CD',
-                    'Docker',
-                    'Kubernetes',
-                    'Test-Driven Development',
-                    'Agile',
-                    'System Design',
-                    'Code Review',
-                    'Performance Optimization',
-                    'Cloud Architecture',
-                  ]
-              ).map((keyword) => (
-                <KeywordTag key={keyword}>{keyword}</KeywordTag>
-              ))}
-            </div>
-            <p className="mt-6 text-sm text-slate-500">
-              Tip: Integrate these naturally into your experience bullets where truthful and
-              relevant
-            </p>
-          </DashboardCard>
-
-          <DashboardCard>
-            <h2 className="text-xl font-bold text-slate-950">Resume Text Preview</h2>
-            <pre className="mt-6 max-h-[420px] overflow-auto rounded-xl bg-slate-100 p-6 font-mono text-sm leading-7 text-slate-950 whitespace-pre-wrap">
-              {text || sampleResume}
-            </pre>
-          </DashboardCard>
+          <Suspense
+            fallback={
+              <div className="flex h-64 items-center justify-center rounded-2xl border border-slate-200 bg-white">
+                <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+              </div>
+            }
+          >
+            <CvPdfReviewer file={file} text={text || sampleResume} improvements={improvements} />
+          </Suspense>
         </div>
 
-        <aside className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-3">
+          <MetricCard
+            icon={<Target className="h-5 w-5 text-red-600" />}
+            label="Critical Issues Found"
+            value={`${Math.max(improvements.length, analysis.missingKeywords.length)}`}
+          />
+          <MetricCard
+            icon={<Target className="h-5 w-5 text-orange-600" />}
+            label="ATS Compatibility"
+            value={`${atsScore}%`}
+          />
+          <MetricCard
+            icon={<Eye className="h-5 w-5 text-emerald-600" />}
+            label="Visual Layout"
+            value="Good"
+          />
+        </div>
+
+        <DashboardCard className="grid gap-8 md:grid-cols-[150px_1fr] md:items-center">
+          <ScoreRing score={score} label="Professional Score" color="#f59e0b" size="lg" />
+          <div>
+            <h2 className="text-xl font-bold text-slate-950">Executive Summary</h2>
+            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-500">
+              {analysis.summary.critique ||
+                'Your resume demonstrates relevant technical experience but lacks impact-driven storytelling. Key improvements include quantifying achievements with specific metrics, using active voice consistently, and optimizing for ATS keyword matching.'}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <StatusPill>Relevant Experience</StatusPill>
+              <StatusPill tone="orange">Weak Metrics</StatusPill>
+              <StatusPill tone="orange">Generic Language</StatusPill>
+            </div>
+          </div>
+        </DashboardCard>
+      </div>
+
+      <div className="mx-auto max-w-[1600px] space-y-6 px-4 pb-8 sm:px-6 lg:px-8">
+        <DashboardCard>
+          <h2 className="text-xl font-bold text-slate-950">Missing ATS Keywords</h2>
+          <p className="mt-4 text-sm text-slate-500">
+            These keywords commonly appear in software engineering job descriptions but are missing
+            from your resume:
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {(analysis.missingKeywords.length
+              ? analysis.missingKeywords
+              : [
+                  'Microservices',
+                  'RESTful APIs',
+                  'GraphQL',
+                  'CI/CD',
+                  'Docker',
+                  'Kubernetes',
+                  'Test-Driven Development',
+                  'Agile',
+                  'System Design',
+                  'Code Review',
+                  'Performance Optimization',
+                  'Cloud Architecture',
+                ]
+            ).map((keyword) => (
+              <KeywordTag key={keyword}>{keyword}</KeywordTag>
+            ))}
+          </div>
+          <p className="mt-5 text-sm text-slate-500">
+            Tip: Integrate these naturally into your experience bullets where truthful and relevant
+          </p>
+        </DashboardCard>
+
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
           <DashboardCard className="border-indigo-200 bg-indigo-50">
             <h2 className="text-lg font-bold text-slate-950">Quick Action Checklist</h2>
             <ul className="mt-5 space-y-2">
@@ -314,7 +280,7 @@ const CvAnalysisDashboard = ({ analysis, text, fileName }: CvAnalysisDashboardPr
               </p>
             </div>
           </DashboardCard>
-        </aside>
+        </div>
       </div>
     </DashboardShell>
   );
