@@ -37,6 +37,24 @@
   "author": "Andrii Maksymov",
   "license": "MIT",
   "packageManager": "pnpm@9.12.3",
+  "pnpm": {
+    "comment": "Security overrides for transitive deps flagged by `pnpm audit --prod --audit-level=high`. Each selector is scoped to the vulnerable range so non-vulnerable majors used elsewhere (older minimatch/path-to-regexp/ws) are untouched. Revisit when the direct dependencies bump these upstream.",
+    "overrides": {
+      "@remix-run/router@<=1.23.1": "^1.23.2",
+      "axios@<1.16.0": "^1.16.0",
+      "form-data@>=4.0.0 <4.0.6": "^4.0.6",
+      "minimatch@>=9.0.0 <9.0.7": "^9.0.7",
+      "multer@<2.2.0": "^2.2.0",
+      "path-to-regexp@>=8.0.0 <8.4.0": "^8.4.0",
+      "ws@>=8.0.0 <8.21.0": "^8.21.0"
+    },
+    "auditConfig": {
+      "comment": "lodash GHSA-r5fr-rjxr-66jc has no released fix (its 'patched >=4.18.0' does not exist; latest lodash is 4.17.21). It reaches us only transitively via @nestjs/config's internal object helpers on non-attacker-controlled input, so it is not exploitable here. Remove once lodash ships a patched release.",
+      "ignoreGhsas": [
+        "GHSA-r5fr-rjxr-66jc"
+      ]
+    }
+  },
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",

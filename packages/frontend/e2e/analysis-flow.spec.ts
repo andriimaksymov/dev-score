@@ -6,21 +6,21 @@ test.describe('Analysis Flow', () => {
   });
 
   test('validates input requirement', async ({ page }) => {
-    const runButton = page.getByRole('button', { name: 'Analyze Profile' });
+    const runButton = page.getByRole('button', { name: 'Analyze profile', exact: true });
     await expect(runButton).toBeDisabled();
 
-    await page.getByPlaceholder('e.g., octocat or https://github.com/octocat').fill('octocat');
+    await page.getByPlaceholder('octocat').fill('octocat');
     await expect(runButton).toBeEnabled();
   });
 
-  test('switches tabs', async ({ page }) => {
+  test('switches source tabs', async ({ page }) => {
     // LinkedIn analysis is PDF-upload based: the tab shows a dropzone plus
     // instructions for exporting the profile PDF from LinkedIn.
-    await page.getByRole('button').filter({ hasText: 'LinkedIn Profile' }).click();
-    await expect(page.getByText('Click to upload or drag and drop')).toBeVisible();
-    await expect(page.getByText('How to export your LinkedIn PDF')).toBeVisible();
+    await page.getByRole('button', { name: 'LinkedIn', exact: true }).click();
+    await expect(page.getByText('Click to browse')).toBeVisible();
+    await expect(page.getByText('Export from LinkedIn')).toBeVisible();
 
-    await page.getByRole('button').filter({ hasText: 'Resume / CV' }).click();
-    await expect(page.getByText('Click to upload or drag and drop')).toBeVisible();
+    await page.getByRole('button', { name: 'Resume', exact: true }).click();
+    await expect(page.getByText('Click to browse')).toBeVisible();
   });
 });

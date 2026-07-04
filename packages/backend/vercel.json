@@ -1,3 +1,10 @@
 {
-  "$comment": "CORS is handled exclusively by the Nest app (enableCors in main.ts, driven by FRONTEND_URL) so there is a single source of truth. Do not add static CORS headers here — they silently override the env-driven config."
+  "$comment": "The Nest app runs as a single serverless function (api/index.ts). Every path is rewritten to it, and the app's own '/api' global prefix is preserved because the original request URL passes through. CORS is handled exclusively by the Nest app (enableCors in app.setup.ts, driven by FRONTEND_URL) — do NOT add static CORS headers here; they would silently override the env-driven config. maxDuration is raised for the AI analysis calls (Hobby caps at 60s; Pro allows more).",
+  "rewrites": [{ "source": "/(.*)", "destination": "/api" }],
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  }
 }
