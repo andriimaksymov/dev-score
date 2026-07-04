@@ -18,25 +18,27 @@ describe('Hero Component', () => {
         <Hero {...defaultProps} />
       </MemoryRouter>
     );
-    expect(screen.getByText(/Complete Developer Profile Analysis/i)).toBeInTheDocument();
+    expect(screen.getByText(/how strong your developer profile is/i)).toBeInTheDocument();
   });
 
   it('renders the CTA button', () => {
     render(
       <MemoryRouter>
-        <Hero {...defaultProps} />
+        <Hero {...defaultProps} inputValue="octocat" />
       </MemoryRouter>
     );
-    const ctaButton = screen.getByRole('button', { name: /Analyze Profile/i });
+    const ctaButton = screen.getByRole('button', { name: /Analyze profile/i });
     expect(ctaButton).toBeInTheDocument();
   });
 
-  it('displays the trusted by badge', () => {
+  it('renders the source selector', () => {
     render(
       <MemoryRouter>
         <Hero {...defaultProps} />
       </MemoryRouter>
     );
-    expect(screen.getByText(/Choose Analysis Source/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /GitHub/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /LinkedIn/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Resume/i })).toBeInTheDocument();
   });
 });

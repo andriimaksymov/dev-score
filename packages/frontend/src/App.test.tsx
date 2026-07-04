@@ -10,6 +10,6 @@ describe('App', () => {
       </MemoryRouter>
     );
     // Pages are lazy-loaded, so await the Hero title past the Suspense fallback.
-    expect(await screen.findByText(/Complete Developer Profile Analysis/i)).toBeInTheDocument();
+    expect(await screen.findByText(/how strong your developer profile is/i)).toBeInTheDocument();
   });
 });

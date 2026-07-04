@@ -18,9 +18,10 @@ describe('Navbar Component', () => {
         <Navbar />
       </MemoryRouter>
     );
-    expect(screen.getByText(/How It Works/i)).toBeInTheDocument();
-    expect(screen.getByText(/Home/i)).toBeInTheDocument();
+    expect(screen.getByText(/How it works/i)).toBeInTheDocument();
+    expect(screen.getByText(/What we measure/i)).toBeInTheDocument();
     expect(screen.getByText(/Privacy/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /History/i })).toBeInTheDocument();
   });
 
   it('does not render auth actions', () => {

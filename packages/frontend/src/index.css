@@ -7,6 +7,18 @@
 @source "../index.html";
 
 @theme {
+  /* Type system — "Instrument": characterful grotesque display, clean body,
+     mono reserved for real numeric readouts (scores, metrics). */
+  --font-sans: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Hanken Grotesk', ui-sans-serif, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* Near-black, faintly violet — the page's "ink" for dark bands, the primary
+     CTA, and the score motif. Violet-600 stays the single electric accent. */
+  --color-ink: #0b0b13;
+  --color-ink-soft: #17172a;
+  --color-canvas: #fafafb;
+
   /* Brand Colors mapped to CSS Variables */
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -115,6 +127,14 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
   }
 
   /* Tailwind v4's Preflight no longer sets `cursor: pointer` on buttons (it
@@ -132,6 +152,42 @@
   button:disabled,
   [role='button'][aria-disabled='true'] {
     cursor: not-allowed;
+  }
+}
+
+/* Entrance choreography for the landing page. Content is visible by default
+   (SSR/headless-safe); the animation only enhances it, and collapses to nothing
+   under reduced-motion. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+@keyframes ring-fill {
+  from {
+    stroke-dashoffset: var(--ring-circumference, 314);
+  }
+}
+
+.ring-progress {
+  animation: ring-fill 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .ring-progress {
+    animation: none;
   }
 }
 

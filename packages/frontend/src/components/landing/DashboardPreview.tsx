@@ -1,45 +1,59 @@
-import { BarChart3, Shield, TrendingUp, Zap } from 'lucide-react';
-
-const features = [
+const dimensions = [
   {
-    title: 'Comprehensive Analysis',
-    description: 'Deep insights across technical skills, project impact, and career positioning',
-    icon: BarChart3,
+    n: '01',
+    title: 'Technical depth',
+    description:
+      'Languages, code quality, and engineering signal read straight from your repositories — not a self-reported skills list.',
   },
   {
-    title: 'Actionable Roadmap',
-    description: 'Step-by-step recommendations to improve your developer profile',
-    icon: TrendingUp,
+    n: '02',
+    title: 'Project impact',
+    description:
+      'What your work actually shipped and reached: scope, activity, and the projects that carry real weight.',
   },
   {
-    title: 'Privacy First',
-    description: 'All analysis runs locally. Your data never leaves your browser',
-    icon: Shield,
+    n: '03',
+    title: 'Career positioning',
+    description:
+      'Trajectory and seniority signal, measured against the role you are actually aiming for.',
   },
   {
-    title: 'Free & Open Source',
-    description: 'No sign-up required. Completely free to use and inspect',
-    icon: Zap,
+    n: '04',
+    title: 'Visibility',
+    description:
+      'How discoverable and legible your work is to a recruiter or hiring manager skimming in 30 seconds.',
   },
 ];
 
 export const DashboardPreview = () => {
   return (
-    <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-16 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
-      {features.map((feature) => {
-        const Icon = feature.icon;
+    <section id="measure" className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+      <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+        <div>
+          <span className="font-mono text-xs font-medium uppercase tracking-widest text-violet-600">
+            What we measure
+          </span>
+          <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-ink sm:text-4xl">
+            Four signals, one honest score.
+          </h2>
+          <p className="mt-5 max-w-md text-base leading-7 text-slate-600">
+            Every score is backed by evidence pulled from your real profile — so you can see not
+            just the number, but exactly what moves it.
+          </p>
+        </div>
 
-        return (
-          <div
-            className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-            key={feature.title}
-          >
-            <Icon className="h-8 w-8 text-violet-600" />
-            <h3 className="mt-6 font-bold text-slate-950">{feature.title}</h3>
-            <p className="mt-3 leading-6 text-slate-500">{feature.description}</p>
-          </div>
-        );
-      })}
+        <div className="grid gap-x-10 gap-y-px sm:grid-cols-2">
+          {dimensions.map((dimension) => (
+            <div key={dimension.n} className="border-t border-slate-200 py-6">
+              <div className="flex items-baseline gap-3">
+                <span className="font-mono text-sm font-medium text-violet-600">{dimension.n}</span>
+                <h3 className="text-lg font-bold text-ink">{dimension.title}</h3>
+              </div>
+              <p className="mt-3 text-[15px] leading-7 text-slate-600">{dimension.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
   );
 };
