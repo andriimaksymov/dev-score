@@ -14,8 +14,11 @@ test.describe('Analysis Flow', () => {
   });
 
   test('switches tabs', async ({ page }) => {
+    // LinkedIn analysis is PDF-upload based: the tab shows a dropzone plus
+    // instructions for exporting the profile PDF from LinkedIn.
     await page.getByRole('button').filter({ hasText: 'LinkedIn Profile' }).click();
-    await expect(page.getByPlaceholder('e.g., https://linkedin.com/in/your-profile')).toBeVisible();
+    await expect(page.getByText('Click to upload or drag and drop')).toBeVisible();
+    await expect(page.getByText('How to export your LinkedIn PDF')).toBeVisible();
 
     await page.getByRole('button').filter({ hasText: 'Resume / CV' }).click();
     await expect(page.getByText('Click to upload or drag and drop')).toBeVisible();

@@ -93,49 +93,6 @@ export const githubAiResponseSchema = z.object({
   evidenceReferences: z.array(z.string()),
 });
 
-export const linkedinDimensionSchema = z.object({
-  score: z.number().min(0).max(100),
-  status: z.string(),
-  insights: z.array(z.string()),
-});
-
-export const linkedinAiResponseSchema = z.object({
-  summary: z.object({
-    text: z.string(),
-    seniorityGuess: z.string(),
-  }),
-  dimensions: z.object({
-    profile: linkedinDimensionSchema,
-    headline: linkedinDimensionSchema,
-    experience: linkedinDimensionSchema,
-    skills: linkedinDimensionSchema,
-    branding: linkedinDimensionSchema,
-    overall: z.number().min(0).max(100),
-  }),
-  recommendations: z.object({
-    headlines: z.array(z.string()),
-    aboutSuggestions: z.object({
-      missing: z.string(),
-      rewritten: z.string(),
-    }),
-    experienceEdits: z.array(
-      z.object({
-        role: z.string(),
-        company: z.string(),
-        improvements: z.array(z.string()),
-      }),
-    ),
-  }),
-  missingKeywords: z.array(z.string()),
-  actionPlan: z.object({
-    thisWeek: z.array(z.string()),
-    next30Days: z.array(z.string()),
-    next60Days: z.array(z.string()),
-  }),
-  sourceLimitations: z.array(z.string()),
-  nextActions: z.array(nextActionSchema),
-});
-
 export const cvImprovementCategorySchema = z.enum([
   'Impact',
   'Clarity',
@@ -176,8 +133,6 @@ export type {
 
 // Response shapes remain backend-owned (inferred from the Zod schemas).
 export type GithubAiResponse = z.infer<typeof githubAiResponseSchema>;
-export type LinkedinAiResponse = z.infer<typeof linkedinAiResponseSchema>;
-export type LinkedinDimension = z.infer<typeof linkedinDimensionSchema>;
 export type CvAiResponse = z.infer<typeof cvAiResponseSchema>;
 export type CvImprovementCategory = z.infer<typeof cvImprovementCategorySchema>;
 

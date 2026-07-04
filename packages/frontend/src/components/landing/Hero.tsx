@@ -153,9 +153,9 @@ export const Hero = ({
 
           <button
             className={cn(
-              'mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-400 to-fuchsia-400 font-bold text-white transition',
+              'mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 font-bold text-white transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600',
               inputValue
-                ? 'hover:from-violet-500 hover:to-fuchsia-500'
+                ? 'hover:from-violet-700 hover:to-fuchsia-700'
                 : 'cursor-not-allowed opacity-70'
             )}
             disabled={!inputValue}

@@ -1,10 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { AiService } from './ai.service';
 import { AiProviderClient } from './providers/ai-provider.client';
-import {
-  githubAiResponseSchema,
-  linkedinAiResponseSchema,
-} from './schemas/ai.schemas';
+import { githubAiResponseSchema } from './schemas/ai.schemas';
 import type {
   GithubProfile,
   GithubRepo,
@@ -121,15 +118,6 @@ describe('AI schemas', () => {
 
     expect(githubAiResponseSchema.safeParse(invalid).success).toBe(false);
   });
-
-  it('rejects malformed LinkedIn dimensions', () => {
-    expect(
-      linkedinAiResponseSchema.safeParse({
-        summary: { text: 'x', seniorityGuess: 'Mid' },
-        dimensions: { overall: 150 },
-      }).success,
-    ).toBe(false);
-  });
 });
 
 describe('AiService', () => {
@@ -199,83 +187,6 @@ describe('AiService', () => {
     expect(result.warnings.some((warning) => warning.includes('repair'))).toBe(
       true,
     );
-  });
-
-  it('sanitizes unsupported LinkedIn metrics and invented companies', async () => {
-    const { service, providerClient } = buildService();
-    const providerOutput = {
-      summary: {
-        text: 'Delivered 50% growth at supplied company.',
-        seniorityGuess: 'Senior',
-      },
-      dimensions: {
-        profile: { score: 80, status: 'Strong', insights: ['Good'] },
-        headline: { score: 80, status: 'Strong', insights: ['Good'] },
-        experience: { score: 80, status: 'Strong', insights: ['Good'] },
-        skills: { score: 80, status: 'Strong', insights: ['Good'] },
-        branding: { score: 80, status: 'Strong', insights: ['Good'] },
-        overall: 80,
-      },
-      recommendations: {
-        headlines: ['Engineer driving 50% growth'],
-        aboutSuggestions: {
-          missing: 'Metrics',
-          rewritten: 'I drive 50% measurable outcomes.',
-        },
-        experienceEdits: [
-          {
-            role: 'Engineer',
-            company: 'Invented Co',
-            improvements: ['Improved revenue by 50%'],
-          },
-        ],
-      },
-      missingKeywords: ['System Design'],
-      actionPlan: {
-        thisWeek: ['Add 50% metric'],
-        next30Days: ['Post 2 articles'],
-        next60Days: ['Grow by 100 followers'],
-      },
-      sourceLimitations: [],
-      nextActions: [
-        {
-          title: 'Add 50% metric',
-          detail: 'Use the 50% result',
-          priority: 'high',
-          metricTag: 'Branding',
-          effort: 'short',
-          evidenceIds: ['linkedin-profile-input'],
-        },
-      ],
-    };
-
-    jest
-      .spyOn(providerClient as any, 'getAvailableProviders')
-      .mockReturnValue([{ name: 'openai', model: 'test-model' }]);
-    jest
-      .spyOn(providerClient as any, 'callProvider')
-      .mockResolvedValue(providerOutput);
-
-    const result = await service.generateLinkedinAnalysis({
-      fullName: 'Alex Example',
-      title: 'Software Engineer',
-      about:
-        'Software engineer building internal tools with React and Node.js for operations teams.',
-      profileText:
-        'Software engineer building internal tools with React and Node.js for operations teams.',
-      experience: [
-        {
-          role: 'Software Engineer',
-          company: 'Supplied Co',
-          description: 'Built internal tools with React and Node.js.',
-        },
-      ],
-      skills: ['React', 'Node.js', 'TypeScript', 'PostgreSQL', 'Docker'],
-    });
-
-    expect(result.summary.text).toContain('measurable');
-    expect(result.recommendations.headlines[0]).toContain('measurable');
-    expect(result.recommendations.experienceEdits).toHaveLength(0);
   });
 
   it('returns low-confidence CV fallback for unreadable extracted text', async () => {

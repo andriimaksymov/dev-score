@@ -11,10 +11,10 @@ http://localhost:3001/api
 ## Health
 
 ```http
-GET /api
+GET /api/health
 ```
 
-Returns the base application response.
+Returns `{ "status": "ok" }`. The root `GET /api` returns application metadata (`{ "message": "Portfolio Analyzer API", "status": "running" }`).
 
 ## GitHub Analysis
 
@@ -84,109 +84,52 @@ Notes:
 - `evidence`, `qualitySignals`, `sourceLimitations`, and `nextActions` are optional richer fields for newer dashboards.
 - GitHub API rate limits are much better when `GITHUB_API_TOKEN` is configured.
 
-## LinkedIn URL Analysis
+## LinkedIn PDF Analysis
 
 ```http
-POST /api/linkedin/analyze-url
-Content-Type: application/json
+POST /api/linkedin/analyze-pdf
+Content-Type: multipart/form-data
 ```
 
-Request:
+Form field:
+
+```text
+file: linkedin-profile.pdf
+```
+
+Upload the PDF exported from LinkedIn (Profile → More → Save to PDF). The backend
+extracts the text, splits it into standard profile sections, and runs a
+section-by-section AI assessment anchored on the detected headline/target title.
+
+Response shape (`LinkedinProfileAssessment` from `@portfolio/shared`):
 
 ```json
 {
-  "url": "https://www.linkedin.com/in/example-profile"
-}
-```
-
-Response shape:
-
-```json
-{
-  "profile": {
-    "fullName": "Example Profile",
-    "title": "",
-    "about": "",
-    "skills": [],
-    "avatarUrl": "https://...",
-    "experience": []
-  },
-  "analysis": {
-    "summary": {
-      "text": "Professional visibility summary",
-      "seniorityGuess": "Mid-Senior"
-    },
-    "dimensions": {
-      "overall": 72,
-      "profile": { "score": 85, "status": "Strong", "insights": [] },
-      "headline": { "score": 68, "status": "Good", "insights": [] },
-      "experience": { "score": 78, "status": "Good", "insights": [] },
-      "skills": { "score": 82, "status": "Strong", "insights": [] },
-      "branding": { "score": 64, "status": "Needs Work", "insights": [] }
-    },
-    "recommendations": {
-      "headlines": ["Full-stack engineer..."],
-      "aboutSuggestions": {
-        "missing": "More metrics",
-        "rewritten": "Improved about section"
-      },
-      "experienceEdits": []
-    },
-    "missingKeywords": ["System Design"],
-    "actionPlan": {
-      "thisWeek": ["Rewrite headline"],
-      "next30Days": ["Publish technical article"],
-      "next60Days": ["Grow target network"]
-    },
-    "analysisMetadata": {
-      "source": "linkedin",
-      "provider": "deterministic",
-      "model": "deterministic-rules-v2",
-      "schemaVersion": "career-analysis-v2",
-      "confidence": 0.28,
-      "warnings": ["LinkedIn URL analysis only extracts the public profile slug."],
-      "generatedAt": "2026-05-01T00:00:00.000Z"
-    },
-    "sourceLimitations": ["Paste structured profile text for high-confidence analysis."],
-    "nextActions": []
-  },
-  "timestamp": "2026-05-01T00:00:00.000Z",
-  "url": "https://www.linkedin.com/in/example-profile"
-}
-```
-
-LinkedIn URL analysis does not scrape LinkedIn or invent profile details. Use structured analysis for high-confidence results.
-
-## LinkedIn Structured Analysis
-
-```http
-POST /api/linkedin/analyze
-Content-Type: application/json
-```
-
-Request:
-
-```json
-{
-  "fullName": "Alex Example",
-  "title": "Software Engineer",
-  "headline": "Software Engineer | React and TypeScript",
-  "about": "I build web applications.",
-  "profileText": "Optional pasted profile text...",
-  "targetRoles": ["Senior Frontend Engineer"],
-  "experience": [
+  "name": "Alex Example",
+  "targetTitle": "Senior Frontend Engineer",
+  "overallScore": 72,
+  "summary": "Overall positioning summary",
+  "sections": [
     {
-      "role": "Software Engineer",
-      "company": "Example Co",
-      "description": "Built and maintained React applications.",
-      "achievements": ["Reduced dashboard load time by 25%"]
+      "key": "headline",
+      "label": "Headline",
+      "present": true,
+      "score": 68,
+      "status": "ok",
+      "currentState": "What the section looks like today",
+      "recommendation": "How to improve it for the target title",
+      "actions": ["Concrete, copy-pasteable next steps"]
     }
   ],
-  "skills": ["JavaScript", "TypeScript", "React"]
+  "generatedAt": "2026-05-01T00:00:00.000Z"
 }
 ```
 
-This endpoint skips URL fetching and analyzes supplied profile data directly.
+Validation:
+
+- A file is required; only PDF content (validated by magic bytes) is accepted.
+- Uploads are capped at 10 MB.
+- Extracted profile text must be at least 100 characters, otherwise the API returns `422`.
 
 ## CV Upload
 
@@ -245,15 +188,53 @@ Validation:
 - A file is required.
 - Only `application/pdf` uploads are accepted.
 
+## Report History
+
+Analyses are persisted when `DATABASE_URL` is configured (see the README). Each
+successful analysis response then includes a top-level `reportId` for building
+shareable `/report/:id` URLs. Without a database the endpoints below return
+`503` and analysis responses carry `reportId: null`.
+
+```http
+GET /api/reports/status
+```
+
+Returns `{ "enabled": boolean }`.
+
+```http
+GET /api/reports
+```
+
+Returns the most recent saved analyses:
+
+```json
+[
+  {
+    "id": "cmc123abc",
+    "source": "github",
+    "subject": "octocat",
+    "overallScore": 68,
+    "createdAt": "2026-07-04T00:00:00.000Z"
+  }
+]
+```
+
+```http
+GET /api/reports/:id
+```
+
+Returns the stored snapshot: the summary fields above plus `payload`, the full
+original analysis response. Unknown ids return `404`.
+
 ## Error Handling
 
 Expected client-facing errors include:
 
 - Missing request body values.
 - GitHub user not found.
-- LinkedIn URL fetch or analysis failure.
 - Missing file upload.
 - Non-PDF file upload.
+- PDF with too little extractable text (`422`).
 - AI provider failure.
 
 The UI should always present a retry path and preserve enough context for the user to adjust the input.

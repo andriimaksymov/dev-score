@@ -28,7 +28,10 @@ export function ScoreRing({ score, label, color = '#7c3aed', size = 'md' }: Scor
           width={config.box}
           height={config.box}
           viewBox={`0 0 ${config.box} ${config.box}`}
+          role="img"
+          aria-label={`${label}: ${normalizedScore} out of 100`}
         >
+          <title>{`${label}: ${normalizedScore}/100`}</title>
           <circle
             cx={center}
             cy={center}

@@ -4,8 +4,6 @@ import type {
   CvAiResponse,
   EvidenceCard,
   GithubAiResponse,
-  LinkedinAiResponse,
-  LinkedinDimension,
   NextAction,
   ProviderName,
   QualitySignal,
@@ -58,32 +56,6 @@ export interface AiAnalysisScores {
   consistency: number;
 }
 
-export interface LinkedinAnalysisRequest {
-  fullName: string;
-  title: string;
-  headline?: string;
-  about: string;
-  profileText?: string;
-  targetRoles?: string[];
-  experience: {
-    role: string;
-    company: string;
-    description: string;
-    startDate?: string;
-    endDate?: string;
-    location?: string;
-    achievements?: string[];
-  }[];
-  skills: string[];
-  avatarUrl?: string;
-}
-
-export interface LinkedinAnalysisResponse extends LinkedinAiResponse {
-  analysisMetadata?: AnalysisMetadata;
-  evidence?: EvidenceCard[];
-  qualitySignals?: QualitySignal[];
-}
-
 export interface CvAnalysisResponse extends CvAiResponse {
   analysisMetadata?: AnalysisMetadata;
   evidence?: EvidenceCard[];
@@ -95,8 +67,6 @@ export type {
   AnalysisSource,
   EvidenceCard,
   GithubAiResponse,
-  LinkedinAiResponse,
-  LinkedinDimension,
   NextAction,
   ProviderName,
   QualitySignal,

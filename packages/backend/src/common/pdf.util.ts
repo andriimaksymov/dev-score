@@ -5,6 +5,34 @@ import pdfParse from 'pdf-parse';
 export const MAX_PDF_BYTES = 10 * 1024 * 1024;
 
 /**
+ * Bound PDF parsing: a crafted PDF (deep object graphs, decompression bombs)
+ * can otherwise pin the event loop or hang the request indefinitely.
+ */
+const PDF_PARSE_TIMEOUT_MS = 20_000;
+
+const withParseTimeout = async <T>(promise: Promise<T>): Promise<T> => {
+  let timer: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(
+                `PDF parsing timed out after ${PDF_PARSE_TIMEOUT_MS}ms`,
+              ),
+            ),
+          PDF_PARSE_TIMEOUT_MS,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+/**
  * Accept a "%PDF-" header anywhere in the first 1KB. Some exporters prepend a
  * BOM or comment before the header, so requiring it at byte 0 wrongly rejects
  * otherwise-valid PDFs. We still validate by content, not the spoofable
@@ -24,8 +52,13 @@ export function isPdf(buffer: Buffer): boolean {
  */
 export async function extractPdfText(buffer: Buffer): Promise<string> {
   try {
-    const pdf = await getDocumentProxy(new Uint8Array(buffer));
-    const { text } = await extractText(pdf, { mergePages: true });
+    const text = await withParseTimeout(
+      (async () => {
+        const pdf = await getDocumentProxy(new Uint8Array(buffer));
+        const extracted = await extractText(pdf, { mergePages: true });
+        return extracted.text;
+      })(),
+    );
     if (text && text.trim().length > 0) {
       return text;
     }
@@ -34,7 +67,7 @@ export async function extractPdfText(buffer: Buffer): Promise<string> {
     // Unparseable by pdf.js — fall through to the looser parser.
   }
 
-  const data = await pdfParse(buffer);
+  const data = await withParseTimeout(pdfParse(buffer));
   return data.text;
 }
 
@@ -48,7 +81,7 @@ export async function extractPdfTextWithLayout(
   buffer: Buffer,
 ): Promise<string> {
   try {
-    const data = await pdfParse(buffer);
+    const data = await withParseTimeout(pdfParse(buffer));
     if (data.text && data.text.trim().length > 0) {
       return data.text;
     }

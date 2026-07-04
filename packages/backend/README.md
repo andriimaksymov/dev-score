@@ -6,7 +6,7 @@ The DevScore backend is a NestJS API that powers developer profile analysis. It 
 
 - Fetch GitHub profile, repository, and event data.
 - Score GitHub activity, project quality, stack diversity, and consistency.
-- Accept LinkedIn profile URLs or structured LinkedIn profile data.
+- Accept LinkedIn profile PDF exports and run section-by-section assessments.
 - Accept PDF resume uploads and extract text.
 - Generate structured AI insights for GitHub, LinkedIn, and CV reports.
 - Fall back across configured AI providers.
@@ -45,15 +45,20 @@ Create `.env` in the repository root:
 
 ```env
 PORT=3001
+FRONTEND_URL=http://localhost:5173
 GITHUB_API_TOKEN=your_github_token
+OPENROUTER_API_KEY=your_openrouter_key
+OPENROUTER_MODEL=openai/gpt-4o-mini
 GEMINI_API_KEY=your_gemini_key
 OPENAI_API_KEY=your_openai_key
 GROQ_API_KEY=your_groq_key
-AI_PROVIDER_ORDER=openai,gemini,groq
+AI_PROVIDER_ORDER=openrouter,openai,gemini,groq
 OPENAI_MODEL=gpt-5-mini
 GEMINI_MODEL=gemini-2.5-flash
 GROQ_MODEL=openai/gpt-oss-120b
 ```
+
+See [.env.example](../../.env.example) for the full, up-to-date list.
 
 At least one AI provider key is needed for AI-generated report sections. If providers are unavailable, the backend returns deterministic evidence-based fallbacks with `analysisMetadata`.
 
@@ -85,43 +90,20 @@ Body:
 }
 ```
 
-### LinkedIn URL
+### LinkedIn PDF
 
 ```http
-POST /api/linkedin/analyze-url
+POST /api/linkedin/analyze-pdf
 ```
 
-Body:
+Multipart form field:
 
-```json
-{
-  "url": "https://www.linkedin.com/in/example"
-}
+```text
+file: linkedin-profile.pdf
 ```
 
-### LinkedIn Structured Data
-
-```http
-POST /api/linkedin/analyze
-```
-
-Body:
-
-```json
-{
-  "fullName": "Alex Example",
-  "title": "Software Engineer",
-  "about": "I build production web applications.",
-  "experience": [
-    {
-      "role": "Software Engineer",
-      "company": "Example Co",
-      "description": "Built React and Node.js applications."
-    }
-  ],
-  "skills": ["TypeScript", "React", "Node.js"]
-}
-```
+Upload the PDF exported from LinkedIn (Profile → More → Save to PDF). Returns a
+section-by-section `LinkedinProfileAssessment` (see `@portfolio/shared`).
 
 ### CV Upload
 

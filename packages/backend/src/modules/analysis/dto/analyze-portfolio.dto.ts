@@ -8,5 +8,6 @@ export class AnalyzePortfolioDto {
   @Matches(/^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/, {
     message: 'username must be a valid GitHub username',
   })
-  username: string;
+  // Populated by the ValidationPipe; `!` is the standard Nest DTO idiom.
+  username!: string;
 }

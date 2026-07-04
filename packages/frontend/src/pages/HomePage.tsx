@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { setPendingFile } from '@/features/analysis/lib/pendingFileStore';
 import { Navbar } from '@/components/shared/Navbar';
 import { Hero } from '@/components/landing/Hero';
 import { DashboardPreview } from '@/components/landing/DashboardPreview';
@@ -20,9 +21,11 @@ const HomePage = () => {
         .trim();
       if (username) navigate(`/analysis/${username}`);
     } else if (activeTab === 'linkedin' && selectedFile) {
-      navigate('/linkedin', { state: { file: selectedFile } });
+      setPendingFile(selectedFile);
+      navigate('/linkedin');
     } else if (activeTab === 'cv' && selectedFile) {
-      navigate('/cv', { state: { file: selectedFile } });
+      setPendingFile(selectedFile);
+      navigate('/cv');
     }
   };
 
@@ -32,9 +35,11 @@ const HomePage = () => {
     // Resume / LinkedIn analysis kicks off as soon as a file is chosen — the
     // destination page uploads and analyzes on mount, so no extra click needed.
     if (activeTab === 'linkedin') {
-      navigate('/linkedin', { state: { file } });
+      setPendingFile(file);
+      navigate('/linkedin');
     } else if (activeTab === 'cv') {
-      navigate('/cv', { state: { file } });
+      setPendingFile(file);
+      navigate('/cv');
     }
   };
 

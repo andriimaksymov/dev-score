@@ -38,6 +38,12 @@ const DEFAULT_PROVIDER_ORDER: RuntimeProviderName[] = [
   'groq',
 ];
 
+/** Hard ceiling for a single provider call; a hung provider must not hang the request. */
+const DEFAULT_CALL_TIMEOUT_MS = 45_000;
+
+/** Output cap: reports fit comfortably; a runaway generation can't burn tokens. */
+const MAX_OUTPUT_TOKENS = 4_096;
+
 const RUNTIME_PROVIDER_NAMES: RuntimeProviderName[] = [
   'openrouter',
   'openai',
@@ -63,6 +69,7 @@ export class AiProviderClient {
   private readonly geminiModel: string;
   private readonly groqModel: string;
   private readonly providerOrder: RuntimeProviderName[];
+  private readonly callTimeoutMs: number;
 
   constructor(private readonly configService: ConfigService) {
     this.openrouterModel =
@@ -75,6 +82,9 @@ export class AiProviderClient {
     this.groqModel =
       this.configService.get<string>('ai.groqModel') ?? 'openai/gpt-oss-120b';
     this.providerOrder = this.resolveProviderOrder();
+    this.callTimeoutMs =
+      Number(this.configService.get<string>('AI_TIMEOUT_MS')) ||
+      DEFAULT_CALL_TIMEOUT_MS;
     this.initializeClients();
   }
 
@@ -146,7 +156,10 @@ Validation issues to fix: ${validationMessage}`,
       } catch (error) {
         const message =
           error instanceof Error ? error.message : 'Unknown provider failure';
-        warnings.push(`${provider.name} failed: ${message}`);
+        // Client-facing warning stays generic; the detailed provider error
+        // (which can include rate-limit info, model names, request ids) is
+        // only logged server-side.
+        warnings.push(`${provider.name} was unavailable.`);
         this.logger.warn(
           `${provider.name} ${task.source} generation failed for ${task.schemaName}: ${message}`,
         );
@@ -251,21 +264,54 @@ Validation issues to fix: ${validationMessage}`,
     if (provider.name === 'openrouter') {
       if (!this.openrouter)
         throw new Error('OpenRouter client is not initialized');
-      return this.callOpenRouter(this.openrouter, provider.model, task);
+      return this.withTimeout(
+        this.callOpenRouter(this.openrouter, provider.model, task),
+        provider.name,
+      );
     }
 
     if (provider.name === 'openai') {
       if (!this.openai) throw new Error('OpenAI client is not initialized');
-      return this.callOpenAi(this.openai, provider.model, task);
+      return this.withTimeout(
+        this.callOpenAi(this.openai, provider.model, task),
+        provider.name,
+      );
     }
 
     if (provider.name === 'gemini') {
       if (!this.gemini) throw new Error('Gemini client is not initialized');
-      return this.callGemini(this.gemini, provider.model, task);
+      return this.withTimeout(
+        this.callGemini(this.gemini, provider.model, task),
+        provider.name,
+      );
     }
 
     if (!this.groq) throw new Error('Groq client is not initialized');
-    return this.callGroq(this.groq, provider.model, task);
+    return this.withTimeout(
+      this.callGroq(this.groq, provider.model, task),
+      provider.name,
+    );
+  }
+
+  /** Bound every provider call so a hung upstream cannot hang the HTTP request. */
+  private async withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+    let timer: NodeJS.Timeout | undefined;
+    try {
+      return await Promise.race([
+        promise,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () =>
+              reject(
+                new Error(`${label} timed out after ${this.callTimeoutMs}ms`),
+              ),
+            this.callTimeoutMs,
+          );
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   /**
@@ -285,6 +331,8 @@ Validation issues to fix: ${validationMessage}`,
           { role: 'system', content: task.systemPrompt },
           { role: 'user', content: task.userPrompt },
         ],
+        max_tokens: MAX_OUTPUT_TOKENS,
+        temperature: 0.2,
         response_format: {
           type: 'json_schema',
           json_schema: {
@@ -310,6 +358,8 @@ Validation issues to fix: ${validationMessage}`,
           },
           { role: 'user', content: task.userPrompt },
         ],
+        max_tokens: MAX_OUTPUT_TOKENS,
+        temperature: 0.2,
         response_format: { type: 'json_object' },
       });
       const content = completion.choices[0]?.message?.content;
@@ -331,6 +381,9 @@ Validation issues to fix: ${validationMessage}`,
         { role: 'system', content: task.systemPrompt },
         { role: 'user', content: task.userPrompt },
       ],
+      // Newer OpenAI models only accept max_completion_tokens (and default
+      // temperature), so no temperature override here.
+      max_completion_tokens: MAX_OUTPUT_TOKENS,
       response_format: zodResponseFormat(task.schema, task.schemaName),
     });
 
@@ -351,6 +404,8 @@ Validation issues to fix: ${validationMessage}`,
       config: {
         responseMimeType: 'application/json',
         responseJsonSchema: this.toJsonSchema(task.schemaName, task.schema),
+        maxOutputTokens: MAX_OUTPUT_TOKENS,
+        temperature: 0.2,
       },
     });
 
@@ -370,6 +425,8 @@ Validation issues to fix: ${validationMessage}`,
           { role: 'system', content: task.systemPrompt },
           { role: 'user', content: task.userPrompt },
         ],
+        max_tokens: MAX_OUTPUT_TOKENS,
+        temperature: 0.2,
         response_format: {
           type: 'json_schema',
           json_schema: {
@@ -395,6 +452,8 @@ Validation issues to fix: ${validationMessage}`,
           },
           { role: 'user', content: task.userPrompt },
         ],
+        max_tokens: MAX_OUTPUT_TOKENS,
+        temperature: 0.2,
         response_format: { type: 'json_object' },
       });
       const content = completion.choices[0]?.message?.content;

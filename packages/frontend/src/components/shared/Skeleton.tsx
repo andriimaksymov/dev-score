@@ -1,0 +1,6 @@
+import { cn } from '@/lib/utils';
+
+/** Animated placeholder block for content that is still loading. */
+export function Skeleton({ className }: { className?: string }) {
+  return <div className={cn('animate-pulse rounded-md bg-slate-200', className)} aria-hidden />;
+}

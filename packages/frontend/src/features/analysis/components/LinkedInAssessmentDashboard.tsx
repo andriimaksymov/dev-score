@@ -104,11 +104,18 @@ export default function LinkedInAssessmentDashboard({
         </section>
 
         {/* Sections */}
-        <div className="mt-6 space-y-5">
-          {assessment.sections.map((section) => (
-            <SectionCard key={section.key} section={section} />
-          ))}
-        </div>
+        {assessment.sections.length === 0 ? (
+          <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+            No profile sections could be detected in this PDF. Export the full profile from LinkedIn
+            (Profile → More → Save to PDF) and upload it again.
+          </div>
+        ) : (
+          <div className="mt-6 space-y-5">
+            {assessment.sections.map((section) => (
+              <SectionCard key={section.key} section={section} />
+            ))}
+          </div>
+        )}
       </div>
     </DashboardShell>
   );

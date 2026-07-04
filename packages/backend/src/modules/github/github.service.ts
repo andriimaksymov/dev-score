@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
@@ -69,6 +73,16 @@ export class GithubService {
     } catch (error: unknown) {
       if (error instanceof AxiosError && error.response?.status === 404) {
         throw new NotFoundException(`GitHub user '${username}' not found`);
+      }
+      // GitHub signals rate limiting with 403/429. Surface it as a temporary
+      // upstream condition (503), not an anonymous 500.
+      if (
+        error instanceof AxiosError &&
+        (error.response?.status === 403 || error.response?.status === 429)
+      ) {
+        throw new ServiceUnavailableException(
+          'GitHub API rate limit reached. Please try again in a few minutes.',
+        );
       }
       throw error;
     }

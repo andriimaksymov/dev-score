@@ -10,6 +10,8 @@ import {
 } from '../ai/interfaces/ai.interfaces';
 import { GithubData } from '../github/interfaces/github.interfaces';
 import type { GithubRepo } from '../github/interfaces/github.interfaces';
+import { rankGithubRepos } from '../github/github-repo.util';
+import { presentStrings, slugify } from '../../common/text.util';
 
 @Injectable()
 export class AnalysisService {
@@ -76,10 +78,7 @@ export class AnalysisService {
     username: string,
     githubData: GithubData,
   ): Promise<{ evidence: EvidenceCard[]; qualitySignals: QualitySignal[] }> {
-    const rankedRepos = this.rankRepositories(githubData.repositories).slice(
-      0,
-      5,
-    );
+    const rankedRepos = rankGithubRepos(githubData.repositories).slice(0, 5);
     const evidence = await Promise.all(
       rankedRepos.map((repo, index) =>
         this.buildRepositoryEvidence(username, repo, index + 1),
@@ -130,7 +129,7 @@ export class AnalysisService {
     ]);
 
     const packageSignals = this.packageSignals(packageJson);
-    const technologies = this.presentStrings([
+    const technologies = presentStrings([
       repo.language,
       ...Object.keys(languages),
       ...repo.topics,
@@ -159,7 +158,7 @@ export class AnalysisService {
     ].filter(Boolean);
 
     return {
-      id: `repo-${index}-${this.slugify(repo.name)}`,
+      id: `repo-${index}-${slugify(repo.name)}`,
       source: 'github',
       title: repo.name,
       summary:
@@ -176,20 +175,6 @@ export class AnalysisService {
         packageSignals.hasTests,
       ),
     };
-  }
-
-  private rankRepositories(repositories: GithubRepo[]): GithubRepo[] {
-    return [...repositories].sort((a, b) => {
-      const forkWeight = Number(!b.fork) - Number(!a.fork);
-      if (forkWeight !== 0) return forkWeight;
-      const starWeight = b.stargazers_count - a.stargazers_count;
-      if (starWeight !== 0) return starWeight;
-      const recencyWeight =
-        new Date(b.pushed_at || b.updated_at).getTime() -
-        new Date(a.pushed_at || a.updated_at).getTime();
-      if (recencyWeight !== 0) return recencyWeight;
-      return b.size - a.size;
-    });
   }
 
   private async safeGetRepoLanguages(
@@ -377,16 +362,5 @@ export class AnalysisService {
     }
 
     return weaknesses;
-  }
-
-  private slugify(value: string): string {
-    return value
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-  }
-
-  private presentStrings(values: Array<string | null | undefined>): string[] {
-    return values.filter((value): value is string => Boolean(value));
   }
 }

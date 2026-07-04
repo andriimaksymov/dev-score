@@ -297,7 +297,8 @@ function buildDocument(segments: ResumeSegment[]) {
               </Text>
             );
           const next = blocks[i + 1];
-          const isTitle = next?.kind === 'para' && isMetaLine(next.runs.map((r) => r.text).join(''));
+          const isTitle =
+            next?.kind === 'para' && isMetaLine(next.runs.map((r) => r.text).join(''));
           if (isTitle)
             return (
               <Text key={i} style={[docStyles.para, docStyles.bold]}>

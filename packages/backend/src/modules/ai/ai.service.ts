@@ -4,15 +4,17 @@ import type {
   GithubProfile,
   GithubRepo,
 } from '../github/interfaces/github.interfaces';
+import { rankGithubRepos } from '../github/github-repo.util';
 import {
-  buildCvPrompt,
-  buildGithubPrompt,
-  buildLinkedinPrompt,
-} from './prompts/ai-prompts';
+  presentStrings,
+  slugify,
+  truncate,
+  unique,
+} from '../../common/text.util';
+import { buildCvPrompt, buildGithubPrompt } from './prompts/ai-prompts';
 import {
   cvAiResponseSchema,
   githubAiResponseSchema,
-  linkedinAiResponseSchema,
 } from './schemas/ai.schemas';
 import type {
   AiAnalysisResponse,
@@ -21,28 +23,17 @@ import type {
   AnalysisSource,
   CvAnalysisResponse,
   EvidenceCard,
-  LinkedinAnalysisRequest,
-  LinkedinAnalysisResponse,
   NextAction,
   ProviderName,
   QualitySignal,
 } from './interfaces/ai.interfaces';
 
-export type {
-  CvAnalysisResponse,
-  LinkedinAnalysisRequest,
-  LinkedinAnalysisResponse,
-} from './interfaces/ai.interfaces';
+export type { CvAnalysisResponse } from './interfaces/ai.interfaces';
 
 export interface CvAnalysisOptions {
   targetRole?: string;
   seniority?: string;
   jobDescription?: string;
-}
-
-export interface LinkedinAnalysisContext {
-  limitedEvidence?: boolean;
-  sourceLimitations?: string[];
 }
 
 interface CvEvidence {
@@ -140,60 +131,8 @@ export class AiService {
       ),
       evidence,
       qualitySignals,
-      sourceLimitations: this.unique([
+      sourceLimitations: unique([
         ...result.data.sourceLimitations,
-        ...result.warnings,
-      ]),
-    };
-  }
-
-  async generateLinkedinAnalysis(
-    data: LinkedinAnalysisRequest,
-    context: LinkedinAnalysisContext = {},
-  ): Promise<LinkedinAnalysisResponse> {
-    const sourceLimitations = this.unique(context.sourceLimitations ?? []);
-    const evidence = this.buildLinkedinEvidence(data, sourceLimitations);
-    const qualitySignals = this.buildLinkedinQualitySignals(data);
-    const hasEnoughEvidence = this.hasMeaningfulLinkedinEvidence(data);
-
-    if (context.limitedEvidence || !hasEnoughEvidence) {
-      return this.buildLinkedinFallback(data, evidence, qualitySignals, [
-        ...sourceLimitations,
-        'LinkedIn analysis is limited because no profile text or structured profile details were supplied.',
-      ]);
-    }
-
-    const prompt = buildLinkedinPrompt(data, sourceLimitations);
-    const result = await this.providerClient.runStructuredTask({
-      source: 'linkedin',
-      schemaName: 'linkedin_analysis',
-      schema: linkedinAiResponseSchema,
-      ...prompt,
-    });
-
-    if (!result) {
-      return this.buildLinkedinFallback(data, evidence, qualitySignals, [
-        ...sourceLimitations,
-        'AI providers were unavailable or returned invalid LinkedIn analysis.',
-      ]);
-    }
-
-    const sanitized = this.sanitizeLinkedinOutput(result.data, data);
-
-    return {
-      ...sanitized,
-      analysisMetadata: this.createMetadata(
-        'linkedin',
-        result.provider,
-        result.model,
-        result.confidence,
-        [...sourceLimitations, ...result.warnings],
-      ),
-      evidence,
-      qualitySignals,
-      sourceLimitations: this.unique([
-        ...sanitized.sourceLimitations,
-        ...sourceLimitations,
         ...result.warnings,
       ]),
     };
@@ -212,7 +151,7 @@ export class AiService {
     }
 
     const prompt = buildCvPrompt({
-      textPreview: this.truncate(text, 30000),
+      textPreview: truncate(text, 30000),
       sections: cvEvidence.sections,
       weakBullets: cvEvidence.weakBullets,
       detectedTechnologies: cvEvidence.detectedTechnologies,
@@ -262,7 +201,7 @@ export class AiService {
       ),
       evidence: cvEvidence.evidence,
       qualitySignals: cvEvidence.qualitySignals,
-      sourceLimitations: this.unique([
+      sourceLimitations: unique([
         ...response.sourceLimitations,
         ...cvEvidence.sourceLimitations,
         ...result.warnings,
@@ -284,7 +223,7 @@ export class AiService {
       model,
       schemaVersion: SCHEMA_VERSION,
       confidence: Math.max(0, Math.min(1, confidence)),
-      warnings: this.unique(warnings).slice(0, 8),
+      warnings: unique(warnings).slice(0, 8),
       generatedAt: new Date().toISOString(),
     };
   }
@@ -297,9 +236,9 @@ export class AiService {
     qualitySignals: QualitySignal[],
     warnings: string[],
   ): AiAnalysisResponse {
-    const rankedRepos = this.rankGithubRepos(repos).slice(0, 3);
-    const technologies = this.unique(
-      this.presentStrings([
+    const rankedRepos = rankGithubRepos(repos).slice(0, 3);
+    const technologies = unique(
+      presentStrings([
         ...repos.map((repo) => repo.language).filter(Boolean),
         ...evidence.flatMap((item) => item.technologies),
       ]),
@@ -339,8 +278,8 @@ export class AiService {
           `${repo.name} has the strongest visible repository signal in this profile.`,
         url: repo.html_url,
         stars: repo.stargazers_count,
-        technologies: this.unique(
-          this.presentStrings([
+        technologies: unique(
+          presentStrings([
             repo.language,
             ...(topEvidence[index]?.technologies ?? []),
           ]),
@@ -376,88 +315,6 @@ export class AiService {
       sourceLimitations: warnings,
       nextActions,
       evidenceReferences: topEvidence.map((item) => item.id),
-    };
-  }
-
-  private buildLinkedinFallback(
-    data: LinkedinAnalysisRequest,
-    evidence: EvidenceCard[],
-    qualitySignals: QualitySignal[],
-    warnings: string[],
-  ): LinkedinAnalysisResponse {
-    const headline = data.headline || data.title || 'Software Engineer';
-    const target = data.targetRoles?.[0] ?? headline;
-    const dimensions = this.linkedinDimensionScores(data);
-    const experienceEdits = data.experience.map((experience) => ({
-      role: experience.role,
-      company: experience.company,
-      improvements: [
-        `Clarify the business outcome for "${experience.description || experience.role}" without inventing metrics.`,
-        `Add the real scale, users, revenue, latency, cost, or reliability metric if available.`,
-      ],
-    }));
-
-    return {
-      summary: {
-        text: warnings.length
-          ? `This LinkedIn analysis is limited because the backend only received sparse profile evidence. Add the profile headline, about section, skills, and experience text for a more specific recruiter-visibility report.`
-          : `${data.fullName} has enough supplied profile evidence for a baseline LinkedIn review. The strongest immediate opportunity is to make the headline and about section more outcome-oriented for ${target}.`,
-        seniorityGuess: this.guessSeniority(data),
-      },
-      dimensions,
-      recommendations: {
-        headlines: [
-          `${headline} | ${data.skills.slice(0, 3).join(' • ') || 'Software Engineering'} | Building measurable product outcomes`,
-          `${target} focused on reliable systems, product impact, and clear engineering execution`,
-        ],
-        aboutSuggestions: {
-          missing:
-            'Specific outcomes, measurable scale, target role positioning, and a concise call to action.',
-          rewritten: data.about
-            ? `${data.about}\n\nTo strengthen this section, add the real product outcomes, scale, and collaboration context behind the work above.`
-            : 'Add a short first-person summary that explains your target role, strongest technical domain, proof points, and the type of opportunities you want.',
-        },
-        experienceEdits,
-      },
-      missingKeywords: this.missingKeywordsForText(
-        `${data.title} ${data.headline ?? ''} ${data.about} ${data.profileText ?? ''} ${data.skills.join(' ')}`,
-        data.targetRoles?.join(' '),
-      ),
-      actionPlan: {
-        thisWeek: [
-          'Paste the full LinkedIn headline, about section, and experience text into structured analysis.',
-          'Rewrite the headline around target role, core stack, and real impact.',
-        ],
-        next30Days: [
-          'Add quantified outcomes to each recent role where the data is truthful.',
-          'Add featured projects that support the target role.',
-        ],
-        next60Days: [
-          'Publish or share technical work that reinforces the desired positioning.',
-          'Ask collaborators for recommendations tied to specific project outcomes.',
-        ],
-      },
-      sourceLimitations: warnings,
-      nextActions: [
-        {
-          title: 'Supply full LinkedIn profile text',
-          detail:
-            'The URL endpoint does not scrape LinkedIn; profile text is needed for high-confidence analysis.',
-          priority: 'high',
-          metricTag: 'Evidence',
-          effort: 'short',
-          evidenceIds: evidence.map((item) => item.id),
-        },
-      ],
-      analysisMetadata: this.createMetadata(
-        'linkedin',
-        'deterministic',
-        GENERIC_MODEL,
-        warnings.length ? 0.28 : 0.58,
-        warnings,
-      ),
-      evidence,
-      qualitySignals,
     };
   }
 
@@ -539,7 +396,7 @@ export class AiService {
     technologies: string[],
   ): EvidenceCard {
     return {
-      id: `repo-${index}-${this.slugify(repo.name)}`,
+      id: `repo-${index}-${slugify(repo.name)}`,
       source: 'github',
       title: repo.name,
       summary:
@@ -547,9 +404,7 @@ export class AiService {
         `${repo.name} is a public repository with ${repo.stargazers_count} stars and ${repo.language ?? 'unknown'} as its primary language.`,
       repoName: repo.name,
       url: repo.html_url,
-      technologies: this.unique(
-        this.presentStrings([repo.language, ...technologies]),
-      ),
+      technologies: unique(presentStrings([repo.language, ...technologies])),
       signals: [
         repo.description
           ? 'Repository has a description'
@@ -613,7 +468,7 @@ export class AiService {
       improvements.push('Create a more consistent public contribution rhythm');
     }
     improvements.push(...evidence.flatMap((item) => item.gaps).slice(0, 3));
-    return this.unique(improvements).slice(0, 6);
+    return unique(improvements).slice(0, 6);
   }
 
   private githubNextActions(
@@ -685,216 +540,6 @@ export class AiService {
       .some((tech) => tech && serialized.includes(tech.toLowerCase()));
 
     return citesEvidence || mentionsRepo || mentionsTechnology;
-  }
-
-  private buildLinkedinEvidence(
-    data: LinkedinAnalysisRequest,
-    sourceLimitations: string[],
-  ): EvidenceCard[] {
-    const signals = [
-      data.title || data.headline ? 'Headline/title supplied' : '',
-      data.about ? 'About section supplied' : '',
-      data.profileText ? 'Full profile text supplied' : '',
-      data.experience.length
-        ? `${data.experience.length} experience entries supplied`
-        : '',
-      data.skills.length ? `${data.skills.length} skills supplied` : '',
-    ].filter(Boolean);
-
-    return [
-      {
-        id: 'linkedin-profile-input',
-        source: 'linkedin',
-        title: data.fullName,
-        summary: signals.length
-          ? signals.join('; ')
-          : 'Only a LinkedIn URL/profile slug was supplied.',
-        repoName: null,
-        url: null,
-        technologies: data.skills,
-        signals,
-        gaps: sourceLimitations,
-        nextActions: [
-          'Supply full LinkedIn profile text for high-confidence analysis',
-        ],
-      },
-    ];
-  }
-
-  private buildLinkedinQualitySignals(
-    data: LinkedinAnalysisRequest,
-  ): QualitySignal[] {
-    return [
-      {
-        name: 'Profile Evidence',
-        status: this.hasMeaningfulLinkedinEvidence(data) ? 'ok' : 'weak',
-        evidence: data.profileText
-          ? 'Full profile text supplied'
-          : 'Analysis is based on structured fields only',
-        score: this.hasMeaningfulLinkedinEvidence(data) ? 68 : 25,
-      },
-      {
-        name: 'Skills Signal',
-        status:
-          data.skills.length >= 6
-            ? 'strong'
-            : data.skills.length
-              ? 'ok'
-              : 'weak',
-        evidence: `${data.skills.length} skills supplied`,
-        score: Math.min(100, data.skills.length * 12),
-      },
-    ];
-  }
-
-  private hasMeaningfulLinkedinEvidence(
-    data: LinkedinAnalysisRequest,
-  ): boolean {
-    const profileTextLength = data.profileText?.trim().length ?? 0;
-    const aboutLength = data.about?.trim().length ?? 0;
-    const experienceTextLength = data.experience.reduce(
-      (sum, item) => sum + (item.description?.trim().length ?? 0),
-      0,
-    );
-    return (
-      profileTextLength > 250 ||
-      aboutLength > 120 ||
-      experienceTextLength > 160 ||
-      data.skills.length >= 5
-    );
-  }
-
-  private linkedinDimensionScores(data: LinkedinAnalysisRequest) {
-    const profileScore = Math.min(
-      100,
-      20 +
-        Number(Boolean(data.title || data.headline)) * 20 +
-        Number(Boolean(data.about)) * 20 +
-        Number(data.experience.length > 0) * 20 +
-        Number(data.skills.length > 0) * 20,
-    );
-    const headlineScore = Math.min(
-      100,
-      Math.max(data.title.length, data.headline?.length ?? 0) * 2,
-    );
-    const experienceScore = Math.min(
-      100,
-      data.experience.reduce(
-        (sum, item) => sum + Math.min(35, item.description.length / 4),
-        0,
-      ),
-    );
-    const skillsScore = Math.min(100, data.skills.length * 10);
-    const brandingScore = Math.min(
-      100,
-      (data.about.length + (data.profileText?.length ?? 0)) / 8,
-    );
-    const overall = Math.round(
-      (profileScore +
-        headlineScore +
-        experienceScore +
-        skillsScore +
-        brandingScore) /
-        5,
-    );
-
-    return {
-      profile: this.dimension(profileScore, 'Profile completeness'),
-      headline: this.dimension(headlineScore, 'Headline clarity'),
-      experience: this.dimension(experienceScore, 'Experience evidence'),
-      skills: this.dimension(skillsScore, 'Skills coverage'),
-      branding: this.dimension(brandingScore, 'Personal positioning'),
-      overall,
-    };
-  }
-
-  private dimension(score: number, label: string) {
-    const rounded = Math.round(score);
-    return {
-      score: rounded,
-      status:
-        rounded >= 80
-          ? 'Strong'
-          : rounded >= 60
-            ? 'Good'
-            : rounded >= 40
-              ? 'Needs Work'
-              : 'Limited Evidence',
-      insights: [
-        `${label} scored ${rounded}/100 based only on supplied profile fields.`,
-      ],
-    };
-  }
-
-  private sanitizeLinkedinOutput(
-    output: LinkedinAnalysisResponse,
-    data: LinkedinAnalysisRequest,
-  ): LinkedinAnalysisResponse {
-    const sourceText = JSON.stringify(data);
-    const allowedCompanies = new Set(
-      data.experience.map((item) => item.company.toLowerCase()),
-    );
-    const allowedRoles = new Set(
-      data.experience.map((item) => item.role.toLowerCase()),
-    );
-    const sanitize = (value: string) =>
-      this.replaceUnsupportedNumbers(value, sourceText);
-
-    return {
-      ...output,
-      summary: {
-        text: sanitize(output.summary.text),
-        seniorityGuess: output.summary.seniorityGuess,
-      },
-      recommendations: {
-        headlines: output.recommendations.headlines.map(sanitize),
-        aboutSuggestions: {
-          missing: sanitize(output.recommendations.aboutSuggestions.missing),
-          rewritten: sanitize(
-            output.recommendations.aboutSuggestions.rewritten,
-          ),
-        },
-        experienceEdits: output.recommendations.experienceEdits
-          .filter(
-            (item) =>
-              allowedCompanies.has(item.company.toLowerCase()) ||
-              allowedRoles.has(item.role.toLowerCase()),
-          )
-          .map((item) => ({
-            ...item,
-            improvements: item.improvements.map(sanitize),
-          })),
-      },
-      actionPlan: {
-        thisWeek: output.actionPlan.thisWeek.map(sanitize),
-        next30Days: output.actionPlan.next30Days.map(sanitize),
-        next60Days: output.actionPlan.next60Days.map(sanitize),
-      },
-      nextActions: output.nextActions.map((action) => ({
-        ...action,
-        title: sanitize(action.title),
-        detail: sanitize(action.detail),
-      })),
-    };
-  }
-
-  private replaceUnsupportedNumbers(value: string, sourceText: string): string {
-    const allowed = new Set(
-      sourceText.match(/\b\d+(?:\.\d+)?\s?[%+xKkMm]?\b/g) ?? [],
-    );
-    return value.replace(/\b\d+(?:\.\d+)?\s?[%+xKkMm]?\b/g, (token) =>
-      allowed.has(token) ? token : 'measurable',
-    );
-  }
-
-  private guessSeniority(data: LinkedinAnalysisRequest): string {
-    const text =
-      `${data.title} ${data.headline ?? ''} ${data.profileText ?? ''}`.toLowerCase();
-    if (/staff|principal|lead|architect|manager/.test(text))
-      return 'Lead/Staff';
-    if (/senior|sr\./.test(text)) return 'Senior';
-    if (/junior|intern|graduate/.test(text)) return 'Junior';
-    return 'Mid-level';
   }
 
   private extractCvEvidence(
@@ -1030,7 +675,7 @@ export class AiService {
     return Object.fromEntries(
       Object.entries(sections).map(([key, value]) => [
         key,
-        this.truncate(value, 2500),
+        truncate(value, 2500),
       ]),
     );
   }
@@ -1086,7 +731,7 @@ export class AiService {
 
   private missingKeywordsForText(text: string, targetText?: string): string[] {
     const haystack = text.toLowerCase();
-    const targetKeywords = this.unique([
+    const targetKeywords = unique([
       ...(targetText?.match(/\b[A-Z][A-Za-z+#./-]{2,}\b/g) ?? []),
       ...COMMON_SOFTWARE_KEYWORDS,
     ]);

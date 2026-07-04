@@ -1,22 +1,3 @@
 {
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "https://portfolio-score-frontend.vercel.app"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
-        },
-        { "key": "Access-Control-Allow-Credentials", "value": "true" }
-      ]
-    }
-  ]
+  "$comment": "CORS is handled exclusively by the Nest app (enableCors in main.ts, driven by FRONTEND_URL) so there is a single source of truth. Do not add static CORS headers here — they silently override the env-driven config."
 }

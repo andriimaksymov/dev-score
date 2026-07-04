@@ -29,45 +29,41 @@ interface GitHubAnalysisDashboardProps {
   onRescan?: () => void;
 }
 
-const fallbackProjects = [
-  {
-    name: 'web-framework',
-    reason: 'Most starred repository with consistent updates',
-    url: '',
-    stars: 2847,
-    technologies: ['TypeScript', 'React', 'Node.js'],
-    improvements: ['Add comprehensive test coverage', 'Improve documentation for contributors'],
-  },
-  {
-    name: 'ml-pipeline',
-    reason: 'Demonstrates advanced Python and ML expertise',
-    url: '',
-    stars: 1203,
-    technologies: ['Python', 'TensorFlow', 'Docker'],
-    improvements: ['Add automated test coverage', 'Create usage examples'],
-  },
-  {
-    name: 'api-gateway',
-    reason: 'Shows infrastructure and scalability knowledge',
-    url: '',
-    stars: 856,
-    technologies: ['Go', 'Kubernetes', 'Redis'],
-    improvements: ['Add performance benchmarks', 'Document deployment process'],
-  },
-];
+const PRIORITY_STYLES: Record<string, string> = {
+  high: 'rounded-md bg-red-50 px-3 py-1 text-sm font-semibold text-red-600',
+  medium: 'rounded-md bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-600',
+  low: 'rounded-md bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600',
+};
 
-const roadmapFallback = [
-  'Add unit tests to top 3 repositories',
-  'Write comprehensive README for flagship projects',
-  'Contribute to 2-3 popular open-source projects',
-  'Document release and deployment steps',
-  'Create a technical blog or portfolio site',
-];
+const EFFORT_LABELS: Record<string, string> = {
+  short: 'Quick win',
+  medium: 'Medium effort',
+  long: 'Longer project',
+};
 
-const priorityFor = (index: number) => (index < 2 ? 'High' : index < 4 ? 'Medium' : 'Low');
-const pointsFor = (index: number) => [8, 6, 10, 5, 4][index] ?? 4;
-const timelineFor = (index: number) =>
-  ['1 week', '3 days', '1 month', '1 week', '2 weeks'][index] ?? '2 weeks';
+const SIGNAL_TONES: Record<string, 'green' | 'blue' | 'orange' | 'slate'> = {
+  strong: 'green',
+  ok: 'blue',
+  weak: 'orange',
+  unknown: 'slate',
+};
+
+/** Status pills derived from the actual scores — nothing hardcoded. */
+const scorePills = (analysis: AnalysisResult) => {
+  const pills: { label: string; tone: 'green' | 'orange' }[] = [];
+  const { activity, projectQuality, consistency } = analysis.scores;
+  if (activity >= 70) pills.push({ label: 'Strong Activity', tone: 'green' });
+  else if (activity < 50) pills.push({ label: 'Low Activity', tone: 'orange' });
+  if (projectQuality >= 70) pills.push({ label: 'High Quality', tone: 'green' });
+  else if (projectQuality < 50) pills.push({ label: 'Quality Needs Work', tone: 'orange' });
+  if (consistency >= 70) pills.push({ label: 'Consistent Contributor', tone: 'green' });
+  else if (consistency < 50) pills.push({ label: 'Irregular Activity', tone: 'orange' });
+  return pills;
+};
+
+const EmptyNote = ({ children }: { children: string }) => (
+  <p className="mt-4 text-sm text-slate-500">{children}</p>
+);
 
 const GitHubAnalysisDashboard = ({
   analysis,
@@ -84,28 +80,29 @@ const GitHubAnalysisDashboard = ({
       document.title = originalTitle;
     }, 500);
   };
-  const projects = analysis.aiInsights?.flagshipProjects?.length
-    ? analysis.aiInsights.flagshipProjects
-    : fallbackProjects;
-  const roadmap = analysis.aiInsights?.improvements?.length
-    ? analysis.aiInsights.improvements
-    : analysis.recommendations.length
-      ? analysis.recommendations
-      : roadmapFallback;
-  const strengths = analysis.strengths.length
-    ? analysis.strengths
-    : (analysis.aiInsights?.keyStrengths ?? []);
+
+  const insights = analysis.aiInsights;
+  const projects = insights?.flagshipProjects ?? [];
+  const nextActions = insights?.nextActions ?? analysis.nextActions ?? [];
+  const roadmap = nextActions.length
+    ? nextActions
+    : (insights?.improvements ?? analysis.recommendations ?? []).map((item) => ({
+        title: item,
+        detail: '',
+        priority: 'medium' as const,
+        metricTag: '',
+        effort: 'medium' as const,
+        evidenceIds: [],
+      }));
+  const strengths = analysis.strengths.length ? analysis.strengths : (insights?.keyStrengths ?? []);
   const weaknesses = analysis.weaknesses.length
     ? analysis.weaknesses
-    : [
-        'Increase open-source contributions',
-        'Improve documentation quality',
-        'Add more collaborative projects',
-      ];
-
+    : (insights?.improvements ?? []);
+  const qualitySignals = analysis.qualitySignals ?? insights?.qualitySignals ?? [];
   const summary =
-    analysis.aiInsights?.summary ||
-    'Your GitHub profile demonstrates strong technical expertise with consistent activity and high-quality projects. Focus on expanding open-source contributions and improving documentation to reach the next level.';
+    insights?.summary ||
+    'No AI summary is available for this profile yet. The scores below are computed directly from public GitHub data.';
+  const headline = insights?.profileSummary || analysis.profile.bio || null;
 
   return (
     <DashboardShell className="github-analysis-report" navWrapperClassName="pdf-screen-only">
@@ -122,12 +119,15 @@ const GitHubAnalysisDashboard = ({
 
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 text-3xl font-bold text-white">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 text-3xl font-bold text-white">
                 {analysis.profile.avatarUrl ? (
                   <img
                     className="h-full w-full object-cover"
                     src={analysis.profile.avatarUrl}
                     alt={analysis.username}
+                    width={80}
+                    height={80}
+                    loading="lazy"
                   />
                 ) : (
                   analysis.username.slice(0, 1).toUpperCase()
@@ -140,10 +140,13 @@ const GitHubAnalysisDashboard = ({
                   </h1>
                   <Github className="h-5 w-5 text-slate-500" />
                 </div>
-                <p className="mt-2 text-base font-medium text-slate-500">
-                  Full-Stack Engineer
-                  {analysis.profile.location ? ` • ${analysis.profile.location}` : ''}
-                </p>
+                {(headline || analysis.profile.location) && (
+                  <p className="mt-2 text-base font-medium text-slate-500">
+                    {headline}
+                    {headline && analysis.profile.location ? ' • ' : ''}
+                    {analysis.profile.location ?? ''}
+                  </p>
+                )}
                 <p className="mt-1 text-sm text-slate-500">
                   {analysis.profile.publicRepos} public repos • {analysis.profile.followers}{' '}
                   followers
@@ -198,9 +201,11 @@ const GitHubAnalysisDashboard = ({
                 <h2 className="text-xl font-bold text-slate-950">Developer Profile Assessment</h2>
                 <p className="mt-5 max-w-3xl text-base leading-7 text-slate-500">{summary}</p>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <StatusPill>Strong Activity</StatusPill>
-                  <StatusPill>High Quality</StatusPill>
-                  <StatusPill tone="orange">Limited Collaboration</StatusPill>
+                  {scorePills(analysis).map((pill) => (
+                    <StatusPill key={pill.label} tone={pill.tone}>
+                      {pill.label}
+                    </StatusPill>
+                  ))}
                 </div>
               </div>
             </DashboardCard>
@@ -212,190 +217,225 @@ const GitHubAnalysisDashboard = ({
                   icon={<Zap className="h-5 w-5" />}
                   label="Activity Score"
                   value={`${analysis.scores.activity}/100`}
-                  helper={`${analysis.profile.publicRepos} public repositories`}
-                  trend="↑ 12%"
-                  trendDirection="up"
+                  helper={
+                    insights?.metricInsights?.activity ??
+                    `${analysis.profile.publicRepos} public repositories`
+                  }
                 />
                 <MetricCard
                   icon={<Code2 className="h-5 w-5" />}
                   label="Project Quality"
                   value={`${analysis.scores.projectQuality}/100`}
-                  helper="High code consistency"
-                  trend="↑ 5%"
-                  trendDirection="up"
+                  helper={
+                    insights?.metricInsights?.quality ?? 'Based on repository completeness signals'
+                  }
                 />
                 <MetricCard
                   icon={<TrendingUp className="h-5 w-5" />}
                   label="Tech Stack Diversity"
                   value={`${analysis.scores.techStackDiversity}/100`}
-                  helper="Primary languages and tooling breadth"
+                  helper={
+                    insights?.metricInsights?.stack ?? 'Primary languages and tooling breadth'
+                  }
                 />
                 <MetricCard
                   icon={<CalendarDays className="h-5 w-5" />}
                   label="Consistency"
                   value={`${analysis.scores.consistency}/100`}
-                  helper="Contribution rhythm"
-                  trend="↓ 3%"
-                  trendDirection="down"
+                  helper={insights?.metricInsights?.consistency ?? 'Contribution rhythm'}
                 />
               </div>
             </section>
 
             <DashboardCard>
               <h2 className="text-xl font-bold text-slate-950">Flagship Repositories</h2>
-              <div className="mt-6 space-y-4">
-                {projects.map((project) => (
-                  <article className="rounded-xl border border-slate-200 p-5" key={project.name}>
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-bold text-slate-950">{project.name}</h3>
-                          <span className="text-sm font-medium text-slate-500">
-                            Quality: {Math.max(75, analysis.scores.projectQuality)}/100
-                          </span>
+              {projects.length === 0 ? (
+                <EmptyNote>
+                  No flagship repositories were identified in this analysis. Public repositories
+                  with descriptions, stars, and recent activity surface here.
+                </EmptyNote>
+              ) : (
+                <div className="mt-6 space-y-4">
+                  {projects.map((project) => (
+                    <article className="rounded-xl border border-slate-200 p-5" key={project.name}>
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h3 className="font-bold text-slate-950">
+                            {project.url ? (
+                              <a
+                                className="hover:underline"
+                                href={project.url}
+                                rel="noreferrer"
+                                target="_blank"
+                              >
+                                {project.name}
+                              </a>
+                            ) : (
+                              project.name
+                            )}
+                          </h3>
+                          <p className="mt-2 text-sm text-slate-500">{project.reason}</p>
                         </div>
-                        <p className="mt-2 text-sm text-slate-500">{project.reason}</p>
+                        <span className="inline-flex items-center gap-1 text-sm text-slate-500">
+                          <Star className="h-4 w-4" aria-hidden />
+                          {project.stars.toLocaleString()}
+                          <span className="sr-only">stars</span>
+                        </span>
                       </div>
-                      <span className="inline-flex items-center gap-1 text-sm text-slate-500">
-                        <Star className="h-4 w-4" />
-                        {project.stars.toLocaleString()}
-                      </span>
-                    </div>
 
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {project.technologies.map((tech) => (
-                        <KeywordTag key={tech}>{tech}</KeywordTag>
-                      ))}
-                    </div>
-
-                    {project.improvements?.length > 0 && (
-                      <div className="mt-5 border-t border-slate-200 pt-4">
-                        <h4 className="text-sm font-bold text-slate-950">
-                          Suggested Improvements:
-                        </h4>
-                        <ul className="mt-3 space-y-2">
-                          {project.improvements.map((item) => (
-                            <WarningItem key={item}>{item}</WarningItem>
+                      {project.technologies.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {project.technologies.map((tech) => (
+                            <KeywordTag key={tech}>{tech}</KeywordTag>
                           ))}
-                        </ul>
-                      </div>
-                    )}
-                  </article>
-                ))}
-              </div>
+                        </div>
+                      )}
+
+                      {project.improvements?.length > 0 && (
+                        <div className="mt-5 border-t border-slate-200 pt-4">
+                          <h4 className="text-sm font-bold text-slate-950">
+                            Suggested Improvements:
+                          </h4>
+                          <ul className="mt-3 space-y-2">
+                            {project.improvements.map((item) => (
+                              <WarningItem key={item}>{item}</WarningItem>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              )}
             </DashboardCard>
 
             <DashboardCard>
               <h2 className="text-xl font-bold text-slate-950">Impact Roadmap</h2>
-              <div className="mt-6 space-y-4">
-                {roadmap.slice(0, 5).map((item, index) => (
-                  <div
-                    className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 p-4"
-                    key={item}
-                  >
-                    <div className="flex items-center gap-4">
-                      <span
-                        className={
-                          priorityFor(index) === 'High'
-                            ? 'rounded-md bg-red-50 px-3 py-1 text-sm font-semibold text-red-600'
-                            : priorityFor(index) === 'Medium'
-                              ? 'rounded-md bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-600'
-                              : 'rounded-md bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600'
-                        }
-                      >
-                        {priorityFor(index)}
-                      </span>
-                      <div>
-                        <p className="font-semibold text-slate-950">{item}</p>
-                        <p className="mt-1 text-sm text-slate-500">
-                          Timeline: {timelineFor(index)}
-                        </p>
+              {roadmap.length === 0 ? (
+                <EmptyNote>
+                  No recommendations were generated for this profile. Re-scan after adding more
+                  public activity.
+                </EmptyNote>
+              ) : (
+                <div className="mt-6 space-y-4">
+                  {roadmap.slice(0, 5).map((action) => (
+                    <div
+                      className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 p-4"
+                      key={action.title}
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className={PRIORITY_STYLES[action.priority] ?? PRIORITY_STYLES.low}>
+                          {action.priority.charAt(0).toUpperCase() + action.priority.slice(1)}
+                        </span>
+                        <div>
+                          <p className="font-semibold text-slate-950">{action.title}</p>
+                          {action.detail && (
+                            <p className="mt-1 text-sm text-slate-500">{action.detail}</p>
+                          )}
+                        </div>
                       </div>
+                      <span className="shrink-0 text-sm font-semibold text-slate-500">
+                        {EFFORT_LABELS[action.effort] ?? ''}
+                      </span>
                     </div>
-                    <span className="shrink-0 font-bold text-emerald-600">
-                      +{pointsFor(index)} points
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </DashboardCard>
           </div>
 
           <aside className="space-y-6">
             <DashboardCard>
-              <h2 className="text-lg font-bold text-slate-950">Domain Expertise</h2>
-              <div className="mt-6 space-y-5">
-                {[
-                  ['Frontend Development', Math.max(72, analysis.scores.techStackDiversity)],
-                  ['Backend Systems', Math.max(70, analysis.scores.projectQuality - 4)],
-                  ['DevOps & Infrastructure', Math.max(55, analysis.scores.consistency - 10)],
-                  ['Machine Learning', 71],
-                  ['Mobile Development', 45],
-                ].map(([label, value], index) => (
-                  <div key={label.toString()}>
-                    <div className="mb-2 flex justify-between text-sm">
-                      <span className="font-medium text-slate-950">{label}</span>
-                      <span className="text-slate-500">{value}%</span>
+              <h2 className="text-lg font-bold text-slate-950">Quality Signals</h2>
+              {qualitySignals.length === 0 ? (
+                <EmptyNote>
+                  No repository quality signals were collected for this analysis.
+                </EmptyNote>
+              ) : (
+                <div className="mt-6 space-y-5">
+                  {qualitySignals.slice(0, 6).map((signal) => (
+                    <div key={signal.name}>
+                      <div className="mb-2 flex items-center justify-between gap-2 text-sm">
+                        <span className="font-medium text-slate-950">{signal.name}</span>
+                        <StatusPill tone={SIGNAL_TONES[signal.status] ?? 'slate'}>
+                          {signal.status}
+                        </StatusPill>
+                      </div>
+                      {signal.score !== null && (
+                        <div
+                          aria-label={signal.name}
+                          aria-valuemax={100}
+                          aria-valuemin={0}
+                          aria-valuenow={signal.score}
+                          className="h-2 rounded-full bg-slate-100"
+                          role="progressbar"
+                        >
+                          <div
+                            className="h-2 rounded-full bg-violet-500"
+                            style={{ width: `${signal.score}%` }}
+                          />
+                        </div>
+                      )}
+                      <p className="mt-2 text-xs text-slate-500">{signal.evidence}</p>
                     </div>
-                    <div className="h-2 rounded-full bg-slate-100">
-                      <div
-                        className="h-2 rounded-full"
-                        style={{
-                          width: `${value}%`,
-                          backgroundColor: ['#2563eb', '#22c55e', '#a855f7', '#f97316', '#94a3b8'][
-                            index
-                          ],
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </DashboardCard>
 
-            <DashboardCard>
-              <h2 className="text-lg font-bold text-slate-950">Career Trajectory</h2>
-              <ul className="mt-5 space-y-3 text-sm text-slate-700">
-                <li className="flex gap-3">
-                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
-                  {analysis.aiInsights?.careerPath || 'Senior level (5-7 years)'}
-                </li>
-                <li className="flex gap-3">
-                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
-                  Full-stack specialization
-                </li>
-                <li className="flex gap-3">
-                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-violet-500" />
-                  Growing toward tech lead
-                </li>
-              </ul>
-            </DashboardCard>
+            {(insights?.careerPath || insights?.overview) && (
+              <DashboardCard>
+                <h2 className="text-lg font-bold text-slate-950">Career Direction</h2>
+                <ul className="mt-5 space-y-3 text-sm text-slate-700">
+                  {insights.careerPath && (
+                    <li className="flex gap-3">
+                      <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                      {insights.careerPath}
+                    </li>
+                  )}
+                  {insights.overview?.working && (
+                    <li className="flex gap-3">
+                      <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+                      {insights.overview.working}
+                    </li>
+                  )}
+                  {insights.overview?.fixFirst && (
+                    <li className="flex gap-3">
+                      <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-violet-500" />
+                      {insights.overview.fixFirst}
+                    </li>
+                  )}
+                </ul>
+              </DashboardCard>
+            )}
 
             <DashboardCard>
               <h2 className="text-lg font-bold text-slate-950">Strengths</h2>
-              <ul className="mt-5 space-y-2">
-                {(strengths.length
-                  ? strengths
-                  : [
-                      'Consistent code quality across projects',
-                      'Active maintenance of repositories',
-                      'Diverse technology stack',
-                    ]
-                )
-                  .slice(0, 4)
-                  .map((item) => (
+              {strengths.length === 0 ? (
+                <EmptyNote>
+                  No standout strengths were detected yet — more public activity gives the analysis
+                  more to work with.
+                </EmptyNote>
+              ) : (
+                <ul className="mt-5 space-y-2">
+                  {strengths.slice(0, 4).map((item) => (
                     <CheckItem key={item}>{item}</CheckItem>
                   ))}
-              </ul>
+                </ul>
+              )}
             </DashboardCard>
 
             <DashboardCard>
               <h2 className="text-lg font-bold text-slate-950">Areas for Growth</h2>
-              <ul className="mt-5 space-y-2">
-                {weaknesses.slice(0, 4).map((item) => (
-                  <WarningItem key={item}>{item}</WarningItem>
-                ))}
-              </ul>
+              {weaknesses.length === 0 ? (
+                <EmptyNote>No specific growth areas were flagged in this analysis.</EmptyNote>
+              ) : (
+                <ul className="mt-5 space-y-2">
+                  {weaknesses.slice(0, 4).map((item) => (
+                    <WarningItem key={item}>{item}</WarningItem>
+                  ))}
+                </ul>
+              )}
             </DashboardCard>
           </aside>
         </div>

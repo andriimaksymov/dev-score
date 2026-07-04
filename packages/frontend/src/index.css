@@ -116,13 +116,23 @@
   body {
     @apply bg-background text-foreground;
   }
-}
 
-/* Custom Utilities */
-.bg-grid-pattern {
-  background-image: linear-gradient(to right, #ffffff10 1px, transparent 1px),
-    linear-gradient(to bottom, #ffffff10 1px, transparent 1px);
-  background-size: 40px 40px;
+  /* Tailwind v4's Preflight no longer sets `cursor: pointer` on buttons (it
+     follows the browser default of `cursor: default`), so every <button> in the
+     app showed an arrow cursor. Restore the expected affordance for genuinely
+     interactive elements, and signal disabled controls explicitly. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  label[for],
+  select,
+  summary {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role='button'][aria-disabled='true'] {
+    cursor: not-allowed;
+  }
 }
 
 @media print {

@@ -17,7 +17,13 @@
     "test:frontend": "pnpm --filter frontend test -- --run",
     "test:backend": "pnpm --filter backend test",
     "test:e2e": "pnpm --filter frontend test:e2e",
+    "test:coverage": "pnpm --filter frontend test:coverage && pnpm --filter backend test:cov",
+    "clean": "pnpm --recursive exec rm -rf dist coverage && rm -rf packages/frontend/playwright-report packages/frontend/test-results",
+    "prepare": "husky",
     "check": "pnpm lint:check && pnpm type-check && pnpm test && pnpm build"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,md}": "prettier --write"
   },
   "keywords": [
     "portfolio",
@@ -32,16 +38,13 @@
   "license": "MIT",
   "packageManager": "pnpm@9.12.3",
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "eslint": "^8.56.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.1.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
     "prettier": "^3.2.4",
     "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">=20.0.0",
-    "pnpm": ">=8.0.0"
+    "pnpm": ">=9.0.0"
   }
 }

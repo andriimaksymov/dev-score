@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// A persisted analysis snapshot. The full API response is stored as JSON so a
+/// report URL always renders exactly what the user saw, even if scoring or
+/// prompt logic changes later.
+model Report {
+  id           String   @id @default(cuid())
+  /// 'github' | 'linkedin' | 'cv' — mirrors AnalysisSource in @portfolio/shared.
+  source       String
+  /// Human-readable subject: GitHub username or uploaded file name.
+  subject      String
+  /// Overall score copied out of the payload for cheap list rendering.
+  overallScore Int?
+  payload      Json
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt(sort: Desc)])
+}

@@ -8,13 +8,17 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
 import { LinkedinService } from './linkedin.service';
+import { ReportsService } from '../reports/reports.service';
 import { MAX_PDF_BYTES, isPdf } from '../../common/pdf.util';
 
 // Parses a PDF and calls paid AI providers — throttle the whole module.
 @Throttle({ default: { ttl: 60_000, limit: 10 } })
 @Controller('linkedin')
 export class LinkedinController {
-  constructor(private readonly linkedinService: LinkedinService) {}
+  constructor(
+    private readonly linkedinService: LinkedinService,
+    private readonly reportsService: ReportsService,
+  ) {}
 
   @Post('analyze-pdf')
   @UseInterceptors(
@@ -29,6 +33,16 @@ export class LinkedinController {
       throw new BadRequestException('Only PDF files are supported');
     }
 
-    return this.linkedinService.analyzeProfileFromPdf(file.buffer);
+    const assessment = await this.linkedinService.analyzeProfileFromPdf(
+      file.buffer,
+    );
+    // Best-effort persistence; null when history is not configured.
+    const reportId = await this.reportsService.save(
+      'linkedin',
+      file.originalname,
+      assessment,
+      assessment.overallScore,
+    );
+    return { ...assessment, reportId };
   }
 }

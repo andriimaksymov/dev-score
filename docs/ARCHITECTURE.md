@@ -84,9 +84,12 @@ packages/backend/src/modules/
 ├── analysis/              # GitHub analysis orchestration endpoint
 ├── cv/                    # PDF upload and parsing
 ├── github/                # GitHub API data fetching
-├── linkedin/              # LinkedIn analysis
-│   ├── dto/               # Request DTOs (profile, analyze-url)
-│   └── linkedin.scraper   # Isolated HTTP fetch + HTML parsing
+├── linkedin/              # LinkedIn PDF analysis
+│   ├── linkedin-pdf.parser    # Splits exported profile PDFs into sections
+│   ├── linkedin-analyzer      # Section-by-section AI assessment
+│   ├── sections.config        # Known LinkedIn section definitions
+│   ├── prompts/ + schemas/    # Section-analysis prompt and Zod schema
+│   └── linkedin.controller    # POST /api/linkedin/analyze-pdf (multipart)
 └── scoring/               # Activity, quality, stack diversity, consistency
 ```
 
@@ -113,9 +116,12 @@ The final overall score is weighted toward project quality while still consideri
 
 The AI service initializes available providers from environment variables:
 
-- `GEMINI_API_KEY`
+- `OPENROUTER_API_KEY`
 - `OPENAI_API_KEY`
+- `GEMINI_API_KEY`
 - `GROQ_API_KEY`
+
+The order providers are tried is controlled by `AI_PROVIDER_ORDER` (default: `openrouter,openai,gemini,groq`).
 
 Different flows can prefer a different provider order, but all flows are designed to try another provider if the first call fails. If every provider fails, the frontend still renders non-AI scoring data where possible.
 

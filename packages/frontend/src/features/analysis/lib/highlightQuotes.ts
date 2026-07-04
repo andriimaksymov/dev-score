@@ -179,6 +179,11 @@ export function highlightQuotes(
       mark.dataset.cvHighlight = String(iv.index);
       mark.dataset.category = iv.category;
       mark.textContent = text.slice(iv.start, iv.end);
+      // Keyboard access: highlights open a change tooltip, so they must be
+      // focusable and announce themselves as interactive.
+      mark.tabIndex = 0;
+      mark.setAttribute('role', 'button');
+      mark.setAttribute('aria-label', `Suggested ${iv.category} rewrite`);
       frag.append(mark);
       cursor = iv.end;
     }

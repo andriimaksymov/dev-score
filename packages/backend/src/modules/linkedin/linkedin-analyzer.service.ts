@@ -27,10 +27,10 @@ export class LinkedinAnalyzer {
     const targetTitle = parsed.headline;
     const lowerFull = profileText.toLowerCase();
 
-    const sections = await Promise.all(
-      SECTIONS.map((def) =>
-        this.analyzeSection(def, parsed.sections, targetTitle, lowerFull),
-      ),
+    // Cap concurrency: one upload can fan out to ~9 provider calls, so an
+    // unbounded Promise.all multiplies cost and rate-limit pressure.
+    const sections = await this.mapWithConcurrency(SECTIONS, 3, (def) =>
+      this.analyzeSection(def, parsed.sections, targetTitle, lowerFull),
     );
 
     const overallScore = this.weightedOverall(sections);
@@ -48,6 +48,27 @@ export class LinkedinAnalyzer {
       sections,
       generatedAt: new Date().toISOString(),
     };
+  }
+
+  /** Order-preserving concurrent map with a fixed worker-pool size. */
+  private async mapWithConcurrency<T, R>(
+    items: readonly T[],
+    limit: number,
+    fn: (item: T) => Promise<R>,
+  ): Promise<R[]> {
+    const results = new Array<R>(items.length);
+    let nextIndex = 0;
+    const workers = Array.from(
+      { length: Math.min(limit, items.length) },
+      async () => {
+        while (nextIndex < items.length) {
+          const index = nextIndex++;
+          results[index] = await fn(items[index]);
+        }
+      },
+    );
+    await Promise.all(workers);
+    return results;
   }
 
   private async analyzeSection(

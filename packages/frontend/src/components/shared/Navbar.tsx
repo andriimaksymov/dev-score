@@ -45,6 +45,13 @@ export const Navbar = () => {
           </button>
           <button
             className="text-sm font-medium text-slate-500 hover:text-slate-950"
+            onClick={() => navigate('/history')}
+            type="button"
+          >
+            History
+          </button>
+          <button
+            className="text-sm font-medium text-slate-500 hover:text-slate-950"
             onClick={() => scrollToSection('privacy')}
             type="button"
           >

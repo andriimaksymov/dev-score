@@ -1,7 +1,6 @@
 import type {
   AiAnalysisScores,
   EvidenceCard,
-  LinkedinAnalysisRequest,
   QualitySignal,
 } from '../interfaces/ai.interfaces';
 import type {
@@ -64,35 +63,6 @@ Ground the summary in repository names, detected languages, or evidence ids.
       })),
       evidence,
       qualitySignals,
-    },
-    null,
-    2,
-  ),
-});
-
-export const buildLinkedinPrompt = (
-  profile: LinkedinAnalysisRequest,
-  sourceLimitations: string[],
-) => ({
-  systemPrompt: `
-You optimize LinkedIn profiles for recruiter visibility.
-${evidenceRules}
-Only rewrite or recommend from supplied profile text, headline, experience, skills, and target roles.
-When suggesting stronger bullets, use placeholders like "add a metric for..." instead of fabricating numbers.
-`,
-  userPrompt: JSON.stringify(
-    {
-      profile: {
-        fullName: profile.fullName,
-        title: profile.title,
-        headline: profile.headline,
-        about: profile.about,
-        profileText: profile.profileText,
-        targetRoles: profile.targetRoles,
-        skills: profile.skills,
-        experience: profile.experience,
-      },
-      sourceLimitations,
     },
     null,
     2,

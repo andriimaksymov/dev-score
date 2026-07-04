@@ -8,7 +8,13 @@ export type {
   NextAction,
 } from '@portfolio/shared';
 
-import type { AnalysisMetadata, EvidenceCard, QualitySignal, NextAction } from '@portfolio/shared';
+import type {
+  AnalysisMetadata,
+  AnalysisScores,
+  EvidenceCard,
+  QualitySignal,
+  NextAction,
+} from '@portfolio/shared';
 
 export interface AiInsights {
   summary: string;
@@ -60,12 +66,8 @@ export interface AnalysisResult {
     publicRepos: number;
   };
   overallScore: number;
-  scores: {
-    activity: number;
-    projectQuality: number;
-    techStackDiversity: number;
-    consistency: number;
-  };
+  // Derived from the shared contract so the shape cannot drift from the API.
+  scores: Omit<AnalysisScores, 'overall'>;
   aiInsights?: AiInsights;
   evidence?: EvidenceCard[];
   qualitySignals?: QualitySignal[];
@@ -75,10 +77,34 @@ export interface AnalysisResult {
   weaknesses: string[];
   recommendations: string[];
   analyzedAt: string;
+  /** Shareable report id when history is configured on the server. */
+  reportId?: string | null;
 }
 
 export interface AnalyzePortfolioRequest {
   username: string;
+}
+
+/** Summary row returned by GET /api/reports. */
+export interface ReportSummary {
+  id: string;
+  source: 'github' | 'linkedin' | 'cv';
+  subject: string;
+  overallScore: number | null;
+  createdAt: string;
+}
+
+/** Full stored report returned by GET /api/reports/:id. */
+export interface StoredReport extends ReportSummary {
+  payload: unknown;
+}
+
+/** Response body of POST /api/cv/upload. */
+export interface CvUploadResponse {
+  fullText: string;
+  analysis: CvAnalysisResult;
+  /** Shareable report id when history is configured on the server. */
+  reportId?: string | null;
 }
 
 export interface CvAnalysisResult {

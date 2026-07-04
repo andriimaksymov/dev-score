@@ -36,6 +36,13 @@ interface CvPdfReviewerProps {
   file?: File;
   text: string;
   improvements: ReviewImprovement[];
+  /**
+   * Controls the right (updated résumé) column:
+   * - `live`: build and show the improved résumé (default)
+   * - `loading`: show a skeleton while analysis is still running
+   * - `hidden`: original résumé only, full width (e.g. analysis failed)
+   */
+  rightPane?: 'live' | 'loading' | 'hidden';
 }
 
 const categoryDot: Record<string, string> = {
@@ -56,7 +63,7 @@ interface Tooltip {
   left: number;
 }
 
-const CvPdfReviewer = ({ file, text, improvements }: CvPdfReviewerProps) => {
+const CvPdfReviewer = ({ file, text, improvements, rightPane = 'live' }: CvPdfReviewerProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const pdfWrapRef = useRef<HTMLDivElement>(null);
 
@@ -151,6 +158,20 @@ const CvPdfReviewer = ({ file, text, improvements }: CvPdfReviewerProps) => {
     [showTooltip]
   );
 
+  // Keyboard equivalent: highlights are focusable role=button marks.
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const mark = (event.target as HTMLElement).closest<HTMLElement>('[data-cv-highlight]');
+      if (!mark) return;
+      event.preventDefault();
+      const index = Number(mark.dataset.cvHighlight);
+      setActiveIndex(index);
+      showTooltip(index, mark.getBoundingClientRect());
+    },
+    [showTooltip]
+  );
+
   // Dismiss the tooltip on outside interaction or scroll.
   useEffect(() => {
     if (!tooltip) return;
@@ -167,8 +188,10 @@ const CvPdfReviewer = ({ file, text, improvements }: CvPdfReviewerProps) => {
   const tooltipItem = tooltip != null ? improvements[tooltip.index] : null;
 
   return (
-    <div ref={rootRef} onClick={handleClick}>
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+    <div ref={rootRef} onClick={handleClick} onKeyDown={handleKeyDown}>
+      <div
+        className={`grid gap-6 ${rightPane === 'hidden' ? '' : 'lg:grid-cols-2'} lg:items-start`}
+      >
         {/* Original résumé */}
         <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-3 flex min-h-[34px] flex-wrap items-center justify-between gap-2">
@@ -177,7 +200,9 @@ const CvPdfReviewer = ({ file, text, improvements }: CvPdfReviewerProps) => {
               Your Resume — Original
             </h3>
             <span className="text-xs text-slate-500">
-              Highlighted passages are what the AI rewrote · click to see the change
+              {rightPane === 'live'
+                ? 'Highlighted passages are what the AI rewrote · click to see the change'
+                : 'Your uploaded résumé'}
             </span>
           </div>
           <div ref={pdfWrapRef} className="max-h-[85vh] overflow-auto rounded-xl bg-slate-50 p-2">
@@ -215,64 +240,79 @@ const CvPdfReviewer = ({ file, text, improvements }: CvPdfReviewerProps) => {
         </section>
 
         {/* Fully updated résumé */}
-        <section className="min-w-0 rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm">
-          <div className="mb-3 flex min-h-[34px] flex-wrap items-center justify-between gap-2">
-            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-700">
-              <Wand2 className="h-4 w-4 text-emerald-600" />
-              Updated Resume — all AI suggestions applied
-            </h3>
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                {updated.appliedCount} change{updated.appliedCount === 1 ? '' : 's'} applied
-              </span>
-              {download && (
-                <a
-                  href={download.url}
-                  download={download.name}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  Download PDF
-                </a>
+        {rightPane !== 'hidden' && (
+          <section className="min-w-0 rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm">
+            <div className="mb-3 flex min-h-[34px] flex-wrap items-center justify-between gap-2">
+              <h3 className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                <Wand2 className="h-4 w-4 text-emerald-600" />
+                Updated Resume — all AI suggestions applied
+              </h3>
+              {rightPane === 'live' ? (
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    {updated.appliedCount} change{updated.appliedCount === 1 ? '' : 's'} applied
+                  </span>
+                  {download && (
+                    <a
+                      href={download.url}
+                      download={download.name}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Download PDF
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <span className="h-6 w-24 animate-pulse rounded-full bg-slate-200" aria-hidden />
               )}
             </div>
-          </div>
 
-          <Suspense
-            fallback={
-              <div className="flex h-64 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-400">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span className="ml-2 text-sm">Loading PDF generator…</span>
+            {rightPane === 'loading' ? (
+              <div className="flex h-[60vh] flex-col items-center justify-center gap-3 rounded-xl border border-slate-200 bg-slate-50">
+                <Loader2 className="h-6 w-6 animate-spin text-emerald-600" aria-hidden />
+                <p className="text-sm text-slate-500">Generating your improved résumé…</p>
               </div>
-            }
-          >
-            <GeneratedResumeViewer
-              segments={updated.segments}
-              width={pageWidth}
-              fileName={file?.name}
-              onDownloadReady={setDownload}
-            />
-          </Suspense>
+            ) : (
+              <>
+                <Suspense
+                  fallback={
+                    <div className="flex h-64 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-400">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                      <span className="ml-2 text-sm">Loading PDF generator…</span>
+                    </div>
+                  }
+                >
+                  <GeneratedResumeViewer
+                    segments={updated.segments}
+                    width={pageWidth}
+                    fileName={file?.name}
+                    onDownloadReady={setDownload}
+                  />
+                </Suspense>
 
-          {updated.unmatched.length > 0 && (
-            <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
-              <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-amber-700">
-                <Sparkles className="h-3.5 w-3.5" />
-                Couldn&apos;t auto-place these — apply manually
-              </p>
-              <ul className="mt-3 space-y-3">
-                {updated.unmatched.map((item) => (
-                  <li key={item.index} className="text-sm">
-                    <p className="text-xs font-medium text-orange-600">{item.suggestion}</p>
-                    <p className="mt-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 font-medium text-slate-900">
-                      {item.rewritten}
+                {updated.unmatched.length > 0 && (
+                  <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-amber-700">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Couldn&apos;t auto-place these — apply manually
                     </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </section>
+                    <ul className="mt-3 space-y-3">
+                      {updated.unmatched.map((item) => (
+                        <li key={item.index} className="text-sm">
+                          <p className="text-xs font-medium text-orange-600">{item.suggestion}</p>
+                          <p className="mt-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 font-medium text-slate-900">
+                            {item.rewritten}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        )}
       </div>
 
       {/* Change tooltip */}

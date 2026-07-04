@@ -3,13 +3,13 @@ import { MemoryRouter } from 'react-router-dom';
 import App from './App';
 
 describe('App', () => {
-  it('renders without crashing', () => {
+  it('renders without crashing', async () => {
     render(
       <MemoryRouter>
         <App />
       </MemoryRouter>
     );
-    // Expect the Hero section title to be present as a basic smoke test
-    expect(screen.getByText(/Complete Developer Profile Analysis/i)).toBeInTheDocument();
+    // Pages are lazy-loaded, so await the Hero title past the Suspense fallback.
+    expect(await screen.findByText(/Complete Developer Profile Analysis/i)).toBeInTheDocument();
   });
 });

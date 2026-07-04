@@ -12,6 +12,7 @@ import { ScoringModule } from './modules/scoring/scoring.module';
 import { AiModule } from './modules/ai/ai.module';
 import { LinkedinModule } from './modules/linkedin/linkedin.module';
 import { CvModule } from './modules/cv/cv.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { CvModule } from './modules/cv/cv.module';
     AiModule,
     LinkedinModule,
     CvModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [
