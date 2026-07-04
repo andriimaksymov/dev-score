@@ -138,6 +138,26 @@ pnpm dev
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:3001/api`
 
+### Deployment
+
+The frontend deploys to Vercel as a static Vite app (root directory `packages/frontend`,
+set `VITE_API_URL` to the backend's `/api` URL — it is baked in at build time).
+
+The backend is a long-running NestJS server and needs a Node host (Render/Railway/Fly),
+not serverless. Because it depends on the `@gitmerit/shared` workspace package, the
+build **must run from the repo root with pnpm** — a checkout scoped to `packages/backend`
+cannot resolve `workspace:*`. The included [render.yaml](render.yaml) encodes the working
+configuration:
+
+```bash
+# build (repo root; --prod=false keeps the nest/prisma CLIs available)
+pnpm install --frozen-lockfile --prod=false && pnpm --filter backend build
+# start
+node packages/backend/dist/main
+```
+
+Set `FRONTEND_URL` on the backend so CORS admits the deployed frontend origin.
+
 ## API
 
 See [docs/API.md](docs/API.md) for request/response examples.

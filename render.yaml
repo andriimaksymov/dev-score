@@ -1,0 +1,26 @@
+# Render blueprint for the GitMerit backend.
+# The build must run from the repo root: the backend depends on the
+# @gitmerit/shared workspace package, which only resolves via pnpm workspaces.
+# --prod=false forces devDependencies (nest CLI, prisma CLI for the
+# `postinstall: prisma generate` hook) even when NODE_ENV=production.
+services:
+  - type: web
+    name: gitmerit-api
+    runtime: node
+    plan: free
+    buildCommand: corepack enable && corepack prepare pnpm@9.12.3 --activate && pnpm install --frozen-lockfile --prod=false && pnpm --filter backend build
+    startCommand: node packages/backend/dist/main
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.12.0
+      - key: FRONTEND_URL
+        value: https://gitmerit.vercel.app
+      - key: GITHUB_API_TOKEN
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: openai/gpt-4o-mini
+      - key: DATABASE_URL
+        sync: false
