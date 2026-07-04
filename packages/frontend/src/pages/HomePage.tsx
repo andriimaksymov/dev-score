@@ -62,7 +62,7 @@ const HomePage = () => {
       <footer className="border-t border-slate-200 bg-canvas">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 text-sm text-slate-500 sm:flex-row sm:px-6 lg:px-8">
           <span className="font-display font-bold text-ink">DevScore</span>
-          <span>Free &amp; open source · Runs entirely in your browser.</span>
+          <span>Free &amp; open source · No account required.</span>
         </div>
       </footer>
     </div>

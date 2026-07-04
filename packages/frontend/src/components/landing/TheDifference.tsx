@@ -1,9 +1,9 @@
 import { ArrowUp } from 'lucide-react';
 
 const guarantees = [
-  { label: 'No data collection', detail: 'Nothing is stored or logged.' },
-  { label: 'Client-side processing', detail: 'Analysis runs in your browser.' },
-  { label: 'Open source', detail: 'Inspect exactly what it does.' },
+  { label: 'No account', detail: 'No sign-up, no email, no tracking.' },
+  { label: 'Nothing stored by default', detail: 'Reports are kept only if you turn on history.' },
+  { label: 'Open source', detail: 'Inspect exactly how every score is made.' },
 ];
 
 const scrollToTool = () => {
@@ -17,14 +17,15 @@ export const TheDifference = () => {
         <div className="grid gap-12 lg:grid-cols-2 lg:items-end">
           <div>
             <span className="font-mono text-xs font-medium uppercase tracking-widest text-violet-400">
-              Privacy by design
+              No strings attached
             </span>
             <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
-              Your profile never leaves your machine.
+              No account, and nothing kept.
             </h2>
             <p className="mt-5 max-w-md text-base leading-7 text-slate-400">
-              DevScore is built so that the honest read costs you nothing — not your data, not an
-              account, not a dollar.
+              Your profile is analyzed on the fly and isn't stored unless you turn on history. No
+              sign-up, no tracking — and the whole engine is open source, so you can see exactly how
+              every score is made.
             </p>
             <button
               type="button"

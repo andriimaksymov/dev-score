@@ -73,7 +73,7 @@ export const Hero = ({
               {[
                 ['3', 'sources analyzed'],
                 ['0', 'sign-up required'],
-                ['100%', 'in your browser'],
+                ['MIT', 'open source'],
               ].map(([value, label]) => (
                 <div key={label}>
                   <dt className="font-mono text-2xl font-bold text-ink">{value}</dt>
