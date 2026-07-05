@@ -143,11 +143,16 @@ pnpm dev
 The frontend deploys to Vercel as a static Vite app (root directory `packages/frontend`,
 set `VITE_API_URL` to the backend's `/api` URL — it is baked in at build time).
 
-The backend is a long-running NestJS server and needs a Node host (Render/Railway/Fly),
-not serverless. Because it depends on the `@gitmerit/shared` workspace package, the
-build **must run from the repo root with pnpm** — a checkout scoped to `packages/backend`
-cannot resolve `workspace:*`. The included [render.yaml](render.yaml) encodes the working
-configuration:
+The backend deploys two ways:
+
+- **Vercel serverless** — `packages/backend/api/index.ts` adapts the Nest app to a
+  single function (see its docblock). Note Vercel's schema rejects unknown keys in
+  `vercel.json`, and Hobby caps function duration at 60s, which long AI analyses can hit.
+- **A long-running Node host** (Render/Railway/Fly) — no duration cap, better fit for
+  SSE streaming. Because the backend depends on the `@gitmerit/shared` workspace package,
+  the build **must run from the repo root with pnpm** — a checkout scoped to
+  `packages/backend` cannot resolve `workspace:*`. The included [render.yaml](render.yaml)
+  encodes the working configuration:
 
 ```bash
 # build (repo root; --prod=false keeps the nest/prisma CLIs available)

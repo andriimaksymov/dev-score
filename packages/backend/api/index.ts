@@ -16,7 +16,12 @@ import { configureApp } from '../src/app.setup';
  *
  * Deploy config lives in `vercel.json`: all paths are routed here, and the
  * app's global `/api` prefix is preserved because the original request URL is
- * passed through to the function.
+ * passed through to the function. Vercel's schema rejects unknown keys in
+ * vercel.json (even "$comment"), so its rationale lives here instead:
+ * CORS is handled exclusively by the Nest app (enableCors in app.setup.ts,
+ * driven by FRONTEND_URL) — do NOT add static CORS headers to vercel.json;
+ * they would silently override the env-driven config. maxDuration is raised
+ * for the AI analysis calls (Hobby caps at 60s; Pro allows more).
  */
 const server = express();
 let ready: Promise<unknown> | null = null;
